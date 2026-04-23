@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(curl -sS -L \"https://api.anthropic.com/v1/design/h/lD1Adw7-6yXyYPms75zslQ?open_file=Portfolio+Tracker.html\" -o /tmp/design.html -w \"%{http_code}\\\\n%{content_type}\\\\n%{url_effective}\\\\n\")",
+      "Bash(curl -sS -L \"https://api.anthropic.com/v1/design/lD1Adw7-6yXyYPms75zslQ\" -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Bash(curl -sS -L \"https://api.anthropic.com/v1/design/h/lD1Adw7-6yXyYPms75zslQ\" -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Bash(curl -sS -L -I \"https://api.anthropic.com/v1/design/h/lD1Adw7-6yXyYPms75zslQ?open_file=Portfolio+Tracker.html\")",
+      "Bash(curl -sS -L -H \"Accept: application/json\" \"https://api.anthropic.com/v1/design/h/lD1Adw7-6yXyYPms75zslQ\" -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Bash(curl -sS -L \"https://api.anthropic.com/v1/design/h/lD1Adw7-6yXyYPms75zslQ/files\" -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Bash(curl -sS -L \"https://api.anthropic.com/v1/design/h/lD1Adw7-6yXyYPms75zslQ/README.md\" -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Bash(curl -sS -L \"https://claude.ai/design/h/lD1Adw7-6yXyYPms75zslQ\" -w \"\\\\n[HTTP %{http_code}]\\\\n\" -o /tmp/d2.html)",
+      "Bash(curl -sS -L \"https://api.anthropic.com/api/design/h/lD1Adw7-6yXyYPms75zslQ\" -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Read(//c/Users/dhaye/.claude/**)",
+      "Read(//c/Users/dhaye/**)",
+      "Bash(unzip -o \"Portfolio Tracker-handoff.zip\" -d handoff/)",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"root=%{http_code} \" http://localhost:5173/)",
+      "Bash(curl -s -o /dev/null -w \"portfolio=%{http_code} \" http://localhost:5173/portfolio.csv)",
+      "Bash(curl -s -o /dev/null -w \"realized=%{http_code}\\\\n\" http://localhost:5173/realized.csv)",
+      "Bash(curl -s http://localhost:5173/portfolio.csv)",
+      "Bash(curl -sv \"http://localhost:5173/portfolio.csv\")",
+      "Bash(curl -sv \"http://localhost:5174/portfolio.csv\")",
+      "Bash(node --input-type=module)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5176)"
+    ]
+  }
+}
