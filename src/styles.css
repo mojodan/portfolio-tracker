@@ -84,6 +84,7 @@ tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: #fafbfd; }
 tbody tr.cash-row { background: #fafbfd; }
 tbody tr.cash-row:hover { background: #f3f5fa; }
+tbody tr.editing { background: rgba(83,58,253,0.03); }
 td { padding: 11px 12px; border-right: 1px solid var(--border); color: var(--navy); font-feature-settings: "tnum"; white-space: nowrap; }
 td:last-child { border-right: none; }
 td.text-col { font-feature-settings: "ss01"; }
@@ -105,6 +106,21 @@ td.text-col { font-feature-settings: "ss01"; }
 
 .table-toolbar { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); background: #fff; }
 .actions-cell { display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+.cell-input { font-family: inherit; font-feature-settings: "tnum"; font-size: 13px; font-weight: 300; color: var(--navy); background: var(--white); border: 1px solid var(--purple); border-radius: 3px; padding: 3px 6px; width: 100%; min-width: 60px; outline: none; }
+.cell-input.text { font-feature-settings: "ss01"; }
 
 .loading { text-align: center; padding: 40px; color: var(--slate); font-size: 13px; }
 .error { text-align: center; padding: 40px; color: var(--danger-text); font-size: 13px; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(6,27,49,0.4); display: flex; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+.modal { background: var(--white); border-radius: 8px; box-shadow: rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px; border: 1px solid var(--border); width: 580px; max-width: calc(100vw - 48px); padding: 28px 32px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 22px; font-weight: 300; letter-spacing: -0.22px; margin-bottom: 4px; }
+.modal-sub { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; font-weight: 400; color: var(--label); }
+.form-input { font-family: inherit; font-feature-settings: "ss01"; font-size: 13px; font-weight: 300; color: var(--navy); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; outline: none; transition: border-color 0.15s; background: var(--white); }
+.form-input:focus { border-color: var(--purple); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.form-required { color: var(--danger); }

@@ -1,0 +1,810 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolio Tracker</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #533afd; --purple-hover: #4434d4; --purple-light: #b9b9f9;
+    --purple-faint: rgba(83,58,253,0.05); --navy: #061b31; --slate: #64748d;
+    --label: #273951; --border: #e5edf5; --success: #15be53; --success-text: #108c3d;
+    --danger: #ea2261; --danger-text: #b91c58; --brand-dark: #1c1e54; --white: #ffffff;
+    --shadow-el: rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px;
+    --shadow-sm: rgba(23,23,23,0.08) 0px 15px 35px 0px;
+    --shadow-xs: rgba(23,23,23,0.06) 0px 3px 6px;
+  }
+  html, body { height: 100%; background: #f7f9fc; }
+  body { font-family: -apple-system, "SF Pro Display", "SF Pro Text", BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 300; color: var(--navy); font-feature-settings: "ss01"; -webkit-font-smoothing: antialiased; }
+
+  .nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-brand { font-size: 18px; font-weight: 400; letter-spacing: -0.3px; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  .nav-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); }
+  .nav-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn { font-family: inherit; font-feature-settings: "ss01"; font-size: 14px; font-weight: 400; cursor: pointer; border-radius: 4px; border: none; padding: 7px 14px; transition: background 0.15s, box-shadow 0.15s, color 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--purple); color: #fff; }
+  .btn-primary:hover { background: var(--purple-hover); }
+  .btn-ghost { background: transparent; color: var(--purple); border: 1px solid var(--purple-light); }
+  .btn-ghost:hover { background: var(--purple-faint); }
+  .btn-danger { background: transparent; color: var(--danger-text); border: 1px solid rgba(234,34,97,0.25); font-size: 12px; padding: 4px 10px; }
+  .btn-danger:hover { background: rgba(234,34,97,0.05); }
+  .btn-sm { font-size: 12px; padding: 5px 10px; }
+  .btn-icon { background: transparent; color: var(--slate); border: 1px solid var(--border); padding: 6px 10px; font-size: 13px; }
+  .btn-icon:hover { background: #f7f9fc; }
+
+  .main { max-width: 1600px; margin: 0 auto; padding: 32px 32px 80px; }
+  .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .page-title { font-size: 32px; font-weight: 300; letter-spacing: -0.64px; color: var(--navy); }
+  .page-subtitle { font-size: 14px; color: var(--slate); margin-top: 4px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .summary-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 20px 24px; box-shadow: var(--shadow-xs); }
+  .summary-label { font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.6px; color: var(--slate); margin-bottom: 8px; }
+  .summary-value { font-size: 26px; font-weight: 300; letter-spacing: -0.26px; color: var(--navy); font-feature-settings: "tnum"; }
+  .summary-sub { font-size: 12px; color: var(--slate); margin-top: 4px; font-feature-settings: "tnum"; }
+  .gain-pos { color: var(--success-text); }
+  .gain-neg { color: var(--danger-text); }
+
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+  .toolbar-left { display: flex; align-items: center; gap: 8px; }
+  .search-wrap { position: relative; }
+  .search-input { font-family: inherit; font-feature-settings: "ss01"; font-size: 13px; font-weight: 400; color: var(--navy); background: var(--white); border: 1px solid var(--border); border-radius: 4px; padding: 7px 12px 7px 32px; width: 220px; outline: none; transition: border-color 0.15s; }
+  .search-input:focus { border-color: var(--purple); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--slate); font-size: 13px; pointer-events: none; }
+  .filter-select { font-family: inherit; font-feature-settings: "ss01"; font-size: 13px; color: var(--label); font-weight: 400; border: 1px solid var(--border); border-radius: 4px; padding: 7px 10px; background: var(--white); outline: none; cursor: pointer; }
+  .filter-select:focus { border-color: var(--purple); }
+
+  /* TABS */
+  .tabs-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--white); padding: 0 16px; border-radius: 6px 6px 0 0; }
+  .tabs-left { display: flex; gap: 0; }
+  .tab-btn { font-family: inherit; font-feature-settings: "ss01"; font-size: 13px; font-weight: 400; background: transparent; border: none; cursor: pointer; padding: 13px 16px; color: var(--slate); border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px; white-space: nowrap; }
+  .tab-btn:hover { color: var(--navy); }
+  .tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 500; }
+  .tab-count { display: inline-block; font-size: 10px; font-weight: 400; background: #f0f4f8; color: var(--slate); border-radius: 10px; padding: 1px 6px; margin-left: 6px; font-feature-settings: "tnum"; }
+  .tab-btn.active .tab-count { background: rgba(83,58,253,0.1); color: var(--purple); }
+  .tabs-actions { display: flex; gap: 8px; padding: 8px 0; }
+
+  /* TABLE */
+  .table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: #f7f9fc; border-bottom: 1px solid var(--border); }
+  thead th { padding: 10px 12px; font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px; color: var(--slate); white-space: nowrap; border-right: 1px solid var(--border); cursor: pointer; user-select: none; }
+  thead th:last-child { border-right: none; }
+  thead th:hover { background: #eef2f8; color: var(--navy); }
+  thead th.sorted { color: var(--purple); background: rgba(83,58,253,0.04); }
+  .sort-icon { margin-left: 4px; opacity: 0.5; font-size: 10px; }
+  .sorted .sort-icon { opacity: 1; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfd; }
+  tbody tr.editing { background: rgba(83,58,253,0.03); }
+  tbody tr.cash-row { background: #fafbfd; }
+  tbody tr.cash-row:hover { background: #f3f5fa; }
+  td { padding: 11px 12px; border-right: 1px solid var(--border); color: var(--navy); font-feature-settings: "tnum"; white-space: nowrap; }
+  td:last-child { border-right: none; }
+  td.text-col { font-feature-settings: "ss01"; }
+
+  .symbol-badge { display: inline-block; font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: var(--purple); background: rgba(83,58,253,0.07); border-radius: 4px; padding: 2px 7px; font-feature-settings: "ss01"; }
+  .cash-badge { color: #2874ad; background: rgba(43,145,223,0.08); }
+  .exchange-tag { font-size: 10px; font-weight: 400; color: var(--slate); background: #f0f4f8; border-radius: 3px; padding: 1px 5px; font-feature-settings: "ss01"; }
+  .gain-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 400; border-radius: 4px; padding: 2px 7px; font-feature-settings: "tnum"; }
+  .gain-badge.pos { background: rgba(21,190,83,0.15); color: var(--success-text); border: 1px solid rgba(21,190,83,0.3); }
+  .gain-badge.neg { background: rgba(234,34,97,0.1); color: var(--danger-text); border: 1px solid rgba(234,34,97,0.25); }
+  .gain-badge.zero { background: #f0f4f8; color: var(--slate); border: 1px solid var(--border); }
+  .notes-text { font-size: 12px; color: var(--slate); font-feature-settings: "ss01"; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+  .cell-input { font-family: inherit; font-feature-settings: "tnum"; font-size: 13px; font-weight: 300; color: var(--navy); background: var(--white); border: 1px solid var(--purple); border-radius: 3px; padding: 3px 6px; width: 100%; min-width: 60px; outline: none; }
+  .cell-input.text { font-feature-settings: "ss01"; }
+  .actions-cell { display: flex; align-items: center; gap: 6px; }
+  .table-footer { border-top: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: #f7f9fc; }
+  .footer-count { font-size: 12px; color: var(--slate); }
+  .footer-total { font-size: 13px; font-weight: 400; color: var(--navy); font-feature-settings: "tnum"; }
+  .sector-pill { font-size: 11px; font-weight: 400; color: var(--label); background: #f0f4f8; border-radius: 4px; padding: 2px 7px; font-feature-settings: "ss01"; white-space: nowrap; }
+  .date-text { font-size: 12px; color: var(--slate); font-feature-settings: "tnum"; }
+
+  /* MODAL */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(6,27,49,0.4); display: flex; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+  .modal { background: var(--white); border-radius: 8px; box-shadow: rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px; border: 1px solid var(--border); width: 580px; max-width: calc(100vw - 48px); padding: 28px 32px; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-size: 22px; font-weight: 300; letter-spacing: -0.22px; margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 12px; font-weight: 400; color: var(--label); }
+  .form-input { font-family: inherit; font-feature-settings: "ss01"; font-size: 13px; font-weight: 300; color: var(--navy); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; outline: none; transition: border-color 0.15s; background: var(--white); }
+  .form-input:focus { border-color: var(--purple); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+
+  /* TWEAKS */
+  .tweaks-panel { position: fixed; bottom: 24px; right: 24px; z-index: 300; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-el); padding: 20px; width: 260px; }
+  .tweaks-title { font-size: 13px; font-weight: 400; color: var(--navy); margin-bottom: 14px; letter-spacing: -0.1px; }
+  .tweak-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .tweak-label { font-size: 12px; color: var(--label); }
+  .tweak-toggle { width: 32px; height: 18px; border-radius: 9px; border: none; cursor: pointer; position: relative; transition: background 0.2s; }
+  .tweak-toggle.on { background: var(--purple); }
+  .tweak-toggle.off { background: #d1d9e0; }
+  .tweak-toggle::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: white; top: 3px; transition: left 0.2s; }
+  .tweak-toggle.on::after { left: 17px; }
+  .tweak-toggle.off::after { left: 3px; }
+  .tweak-select { font-family: inherit; font-size: 12px; color: var(--label); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; background: var(--white); outline: none; cursor: pointer; }
+  .tweak-divider { height: 1px; background: var(--border); margin: 12px 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+const fmt$ = v => v == null || v === '' ? '—' :
+  new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+const fmtN = v => v == null || v === '' ? '—' :
+  new Intl.NumberFormat('en-US',{minimumFractionDigits:0,maximumFractionDigits:4}).format(v);
+const fmtGainPct = v => v == null || v === '' ? '' :
+  (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%';
+const fmtDate = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : null;
+
+// ── Seed: open positions ──────────────────────────────────────────────────────
+const SEED = [
+  {id:1,  symbol:'AAPL',  exchange:'NASDAQ', name:'Apple Inc.',             brokerage:'Fidelity',      shares:100, avgCost:148.50, price:187.42, dayChangePct:-1.24, sector:'Technology', altSymbol:'',       notes:'Core long-term hold',   dateIn:'2021-03-15'},
+  {id:2,  symbol:'MSFT',  exchange:'NASDAQ', name:'Microsoft Corp.',        brokerage:'Schwab',        shares:50,  avgCost:278.20, price:414.80, dayChangePct:0.87,  sector:'Technology', altSymbol:'',       notes:'Cloud/AI exposure',     dateIn:'2020-11-02'},
+  {id:3,  symbol:'NVDA',  exchange:'NASDAQ', name:'NVIDIA Corp.',           brokerage:'Fidelity',      shares:30,  avgCost:412.00, price:875.50, dayChangePct:3.41,  sector:'Technology', altSymbol:'',       notes:'AI infrastructure play',dateIn:'2022-06-10'},
+  {id:4,  symbol:'JPM',   exchange:'NYSE',   name:'JPMorgan Chase & Co.',   brokerage:'TD Ameritrade', shares:75,  avgCost:138.60, price:196.30, dayChangePct:-0.55, sector:'Financials', altSymbol:'',       notes:'',                     dateIn:'2019-08-22'},
+  {id:5,  symbol:'BRK.B', exchange:'NYSE',   name:'Berkshire Hathaway B',   brokerage:'Fidelity',      shares:40,  avgCost:308.00, price:382.10, dayChangePct:0.31,  sector:'Financials', altSymbol:'BRK/B',  notes:'Value anchor',         dateIn:'2018-04-05'},
+  {id:6,  symbol:'VTI',   exchange:'NYSE',   name:'Vanguard Total Mkt ETF', brokerage:'Schwab',        shares:60,  avgCost:218.40, price:244.80, dayChangePct:-0.72, sector:'ETF',        altSymbol:'',       notes:'Passive core',         dateIn:'2020-01-14'},
+  {id:7,  symbol:'QQQ',   exchange:'NASDAQ', name:'Invesco QQQ Trust',      brokerage:'Schwab',        shares:25,  avgCost:362.00, price:447.60, dayChangePct:1.18,  sector:'ETF',        altSymbol:'',       notes:'Tech growth exposure',  dateIn:'2021-09-30'},
+  {id:8,  symbol:'XOM',   exchange:'NYSE',   name:'Exxon Mobil Corp.',      brokerage:'TD Ameritrade', shares:80,  avgCost:102.40, price:118.70, dayChangePct:-1.83, sector:'Energy',     altSymbol:'',       notes:'Dividend play',        dateIn:'2022-02-28'},
+  {id:9,  symbol:'JNJ',   exchange:'NYSE',   name:'Johnson & Johnson',      brokerage:'Fidelity',      shares:45,  avgCost:158.20, price:147.30, dayChangePct:0.14,  sector:'Healthcare', altSymbol:'',       notes:'Dividend compounder',  dateIn:'2017-07-19'},
+  {id:10, symbol:'CASH',  exchange:'—',      name:'Cash & Equivalents',     brokerage:'Fidelity',      shares:null,avgCost:null,   price:null,   dayChangePct:null,  sector:'Cash',       altSymbol:'',       notes:'HYSA @ 4.8% APY',      dateIn:null},
+];
+const SEED_CASH = 12500;
+
+// ── Seed: realized positions ──────────────────────────────────────────────────
+const REALIZED_SEED = [
+  {id:101, symbol:'META',  exchange:'NASDAQ', name:'Meta Platforms Inc.',   brokerage:'Fidelity',      shares:40,  avgCost:192.30, avgSell:326.80, sector:'Technology', altSymbol:'FB',  notes:'Trimmed position',      dateIn:'2022-11-04', dateOut:'2023-09-15'},
+  {id:102, symbol:'TSLA',  exchange:'NASDAQ', name:'Tesla Inc.',            brokerage:'Schwab',        shares:20,  avgCost:218.50, avgSell:178.20, sector:'Technology', altSymbol:'',    notes:'Stop-loss triggered',   dateIn:'2022-06-01', dateOut:'2023-01-20'},
+  {id:103, symbol:'AMZN',  exchange:'NASDAQ', name:'Amazon.com Inc.',       brokerage:'TD Ameritrade', shares:15,  avgCost:104.60, avgSell:182.40, sector:'Technology', altSymbol:'',    notes:'Rebalance',             dateIn:'2023-01-10', dateOut:'2024-03-05'},
+  {id:104, symbol:'GLD',   exchange:'NYSE',   name:'SPDR Gold Shares ETF',  brokerage:'Fidelity',      shares:30,  avgCost:168.20, avgSell:194.50, sector:'Commodities',altSymbol:'',    notes:'Took profits',          dateIn:'2021-08-22', dateOut:'2023-06-30'},
+];
+
+let _nextId = 11;
+let _nextRId = 105;
+
+function deriveRow(r, cashValue) {
+  if (r.symbol === 'CASH') return {...r, totalCost:cashValue, marketValue:cashValue, gainLoss:0, gainLossPct:0};
+  const totalCost = (r.shares||0)*(r.avgCost||0);
+  const marketValue = (r.shares||0)*(r.price||0);
+  const gainLoss = marketValue - totalCost;
+  const gainLossPct = totalCost > 0 ? (gainLoss/totalCost)*100 : 0;
+  return {...r, totalCost, marketValue, gainLoss, gainLossPct};
+}
+function deriveRealized(r) {
+  const totalCost = (r.shares||0)*(r.avgCost||0);
+  const totalInflow = (r.shares||0)*(r.avgSell||0);
+  const gainLoss = totalInflow - totalCost;
+  const gainLossPct = totalCost > 0 ? (gainLoss/totalCost)*100 : 0;
+  return {...r, totalCost, totalInflow, gainLoss, gainLossPct};
+}
+
+// ── GainBadge ─────────────────────────────────────────────────────────────────
+function GainBadge({value, pct, showPct}) {
+  if (value == null) return <span className="gain-badge zero">—</span>;
+  const cls = value > 0 ? 'pos' : value < 0 ? 'neg' : 'zero';
+  const arrow = value > 0 ? '▲' : value < 0 ? '▼' : '';
+  return <span className={`gain-badge ${cls}`}>{arrow} {showPct ? fmtGainPct(pct) : fmt$(value)}</span>;
+}
+
+// ── EditCell ──────────────────────────────────────────────────────────────────
+function EditCell({value, onChange, type='text', className=''}) {
+  return <input className={`cell-input ${className}`} type={type==='number'?'number':'text'} value={value??''} onChange={e=>onChange(type==='number'?(e.target.value===''?'':parseFloat(e.target.value)):e.target.value)} />;
+}
+
+// ── SummaryCard ───────────────────────────────────────────────────────────────
+function SummaryCard({label, value, sub, subClass}) {
+  return (
+    <div className="summary-card">
+      <div className="summary-label">{label}</div>
+      <div className="summary-value">{value}</div>
+      {sub && <div className={`summary-sub ${subClass||''}`}>{sub}</div>}
+    </div>
+  );
+}
+
+// ── AddPositionModal ──────────────────────────────────────────────────────────
+function AddPositionModal({onClose, onSave}) {
+  const [f, setF] = useState({symbol:'',exchange:'',name:'',brokerage:'',shares:'',avgCost:'',price:'',sector:'',altSymbol:'',notes:'',dateIn:''});
+  const set = k => v => setF(p=>({...p,[k]:v}));
+  const save = () => {
+    if (!f.symbol) return;
+    onSave({...f, id:_nextId++, shares:f.shares?parseFloat(f.shares):null, avgCost:f.avgCost?parseFloat(f.avgCost):null, price:f.price?parseFloat(f.price):null, dayChangePct:null, dateIn:f.dateIn||null});
+    onClose();
+  };
+  return (
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-title">Add Position</div>
+        <div className="modal-sub">Enter the details for this holding.</div>
+        <div className="form-grid">
+          {[['symbol','Symbol','text'],['exchange','Exchange','text'],['name','Company Name','text'],['brokerage','Brokerage','text'],['shares','Shares','number'],['avgCost','Avg Cost ($)','number'],['price','Current Price ($)','number'],['sector','Sector','text'],['dateIn','Date In','date']].map(([k,label,type])=>(
+            <div key={k} className={`form-group ${['name','brokerage'].includes(k)?'full':''}`}>
+              <label className="form-label">{label}</label>
+              <input className="form-input" type={type} value={f[k]} onChange={e=>set(k)(e.target.value)} placeholder={type==='date'?'':label} />
+            </div>
+          ))}
+          <div className="form-group full">
+            <label className="form-label">Alt Symbol</label>
+            <input className="form-input" value={f.altSymbol} onChange={e=>set('altSymbol')(e.target.value)} placeholder="Alternative ticker / identifier (optional)" />
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Notes</label>
+            <input className="form-input" value={f.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Optional notes…" />
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={save}>Add Position</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AddRealizedModal ──────────────────────────────────────────────────────────
+function AddRealizedModal({onClose, onSave, initialData=null}) {
+  const [f, setF] = useState({
+    symbol: initialData?.symbol||'',
+    exchange: initialData?.exchange||'',
+    name: initialData?.name||'',
+    brokerage: initialData?.brokerage||'',
+    shares: initialData?.shares!=null?String(initialData.shares):'',
+    avgCost: initialData?.avgCost!=null?String(initialData.avgCost):'',
+    avgSell: initialData?.price!=null?String(initialData.price):'',
+    sector: initialData?.sector||'',
+    altSymbol: initialData?.altSymbol||'',
+    notes: initialData?.notes||'',
+    dateIn: initialData?.dateIn||'',
+    dateOut: ''
+  });
+  const set = k => v => setF(p=>({...p,[k]:v}));
+  const save = () => {
+    if (!f.symbol) return;
+    onSave({...f, id:_nextRId++, shares:f.shares?parseFloat(f.shares):null, avgCost:f.avgCost?parseFloat(f.avgCost):null, avgSell:f.avgSell?parseFloat(f.avgSell):null, dateIn:f.dateIn||null, dateOut:f.dateOut||null});
+    onClose();
+  };
+  return (
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-title">Add Realized Position</div>
+        <div className="modal-sub">Record a closed / sold position.</div>
+        <div className="form-grid">
+          {[['symbol','Symbol','text'],['exchange','Exchange','text'],['name','Company Name','text'],['brokerage','Brokerage','text'],['shares','Shares','number'],['avgCost','Avg Cost ($)','number'],['avgSell','Avg Sell Price ($)','number'],['sector','Sector','text'],['dateIn','Date In','date'],['dateOut','Date Out','date']].map(([k,label,type])=>(
+            <div key={k} className={`form-group ${['name','brokerage'].includes(k)?'full':''}`}>
+              <label className="form-label">{label}</label>
+              <input className="form-input" type={type} value={f[k]} onChange={e=>set(k)(e.target.value)} placeholder={type==='date'?'':label} />
+            </div>
+          ))}
+          <div className="form-group full">
+            <label className="form-label">Alt Symbol</label>
+            <input className="form-input" value={f.altSymbol} onChange={e=>set('altSymbol')(e.target.value)} placeholder="Alternative ticker / identifier (optional)" />
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Notes</label>
+            <input className="form-input" value={f.notes} onChange={e=>set('notes')(e.target.value)} placeholder="Optional notes…" />
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={save}>Add Realized Position</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── PortfolioTable ────────────────────────────────────────────────────────────
+function PortfolioTable({rows, cashValue, setCashValue, setRows, highlightGains, densityMode, onClosePosition}) {
+  const [editingId, setEditingId] = useState(null);
+  const [editBuf, setEditBuf] = useState({});
+  const [sortCol, setSortCol] = useState('symbol');
+  const [sortDir, setSortDir] = useState('asc');
+  const [search, setSearch] = useState('');
+  const [filterSector, setFilterSector] = useState('');
+
+  const derived = useMemo(()=>rows.map(r=>deriveRow(r,cashValue)),[rows,cashValue]);
+  const sectors = useMemo(()=>[...new Set(rows.map(r=>r.sector).filter(Boolean))].sort(),[rows]);
+  const brokerages = useMemo(()=>[...new Set(rows.map(r=>r.brokerage).filter(Boolean))].sort(),[rows]);
+  const [filterBrokerage, setFilterBrokerage] = useState('');
+
+  const filtered = useMemo(()=>{
+    let d = derived;
+    if(search){const q=search.toLowerCase(); d=d.filter(r=>[r.symbol,r.name,r.brokerage,r.sector,r.notes].some(v=>v&&v.toLowerCase().includes(q)));}
+    if(filterSector) d=d.filter(r=>r.sector===filterSector);
+    if(filterBrokerage) d=d.filter(r=>r.brokerage===filterBrokerage);
+    return d;
+  },[derived,search,filterSector,filterBrokerage]);
+
+  const sorted = useMemo(()=>[...filtered].sort((a,b)=>{
+    if(a.symbol==='CASH')return 1; if(b.symbol==='CASH')return -1;
+    let av=a[sortCol],bv=b[sortCol];
+    if(av==null)return 1; if(bv==null)return -1;
+    if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}
+    return sortDir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);
+  }),[filtered,sortCol,sortDir]);
+
+  const totals = useMemo(()=>{
+    const mv=derived.reduce((s,r)=>s+(r.marketValue||0),0);
+    const tc=derived.reduce((s,r)=>s+(r.totalCost||0),0);
+    const gl=mv-tc; const glPct=tc>0?(gl/tc)*100:0;
+    return {mv,tc,gl,glPct};
+  },[derived]);
+
+  const handleSort = col=>{if(sortCol===col)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortCol(col);setSortDir('asc');}};
+  const startEdit = row=>{setEditingId(row.id);setEditBuf({...row});};
+  const cancelEdit = ()=>{setEditingId(null);setEditBuf({});};
+  const saveEdit = ()=>{
+    if(editBuf.symbol==='CASH'&&editBuf.cashValue!=null)setCashValue(parseFloat(editBuf.cashValue)||0);
+    setRows(rs=>rs.map(r=>r.id===editingId?{...editBuf}:r));
+    setEditingId(null);setEditBuf({});
+  };
+  const deleteRow = id=>{setRows(rs=>rs.filter(r=>r.id!==id));if(editingId===id)cancelEdit();};
+
+  const th=(label,col,align='right')=>(
+    <th style={{textAlign:align}} className={sortCol===col?'sorted':''} onClick={()=>handleSort(col)}>
+      {label}<span className="sort-icon">{sortCol===col?(sortDir==='asc'?'↑':'↓'):'↕'}</span>
+    </th>
+  );
+  const py = densityMode==='compact'?'7px':densityMode==='comfortable'?'15px':'11px';
+  const isCash = r=>r.symbol==='CASH';
+
+  return (
+    <>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 16px',borderBottom:'1px solid var(--border)',background:'#fff'}}>
+        <div className="toolbar-left">
+          <div className="search-wrap">
+            <span className="search-icon">⌕</span>
+            <input className="search-input" placeholder="Search holdings…" value={search} onChange={e=>setSearch(e.target.value)} />
+          </div>
+          <select className="filter-select" value={filterSector} onChange={e=>setFilterSector(e.target.value)}>
+            <option value="">All Sectors</option>
+            {sectors.map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+          <select className="filter-select" value={filterBrokerage} onChange={e=>setFilterBrokerage(e.target.value)}>
+            <option value="">All Brokerages</option>
+            {brokerages.map(b=><option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="table-scroll">
+        <table>
+          <thead><tr>
+            {th('Symbol','symbol','left')}
+            {th('Exchange','exchange','left')}
+            {th('Company','name','left')}
+            {th('Brokerage','brokerage','left')}
+            {th('Shares','shares')}
+            {th('Avg Cost','avgCost')}
+            {th('Total Cost','totalCost')}
+            {th('Cur. Price','price')}
+            {th('Mkt Value','marketValue')}
+            {th('Gain / Loss','gainLoss')}
+            {th('G/L %','gainLossPct')}
+            {th('1-Day G/L %','dayChangePct')}
+            {th('Sector','sector','left')}
+            <th style={{textAlign:'left'}}>Alt Symbol</th>
+            <th style={{textAlign:'left'}}>Notes</th>
+            {th('Date In','dateIn','left')}
+            <th style={{textAlign:'center',width:80}}>Actions</th>
+          </tr></thead>
+          <tbody>
+            {sorted.map(row=>{
+              const editing=editingId===row.id;
+              const cash=isCash(row);
+              const buf=editBuf;
+              return (
+                <tr key={row.id} className={`${editing?'editing':''} ${cash?'cash-row':''}`}>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing&&!cash?<EditCell value={buf.symbol} onChange={v=>setEditBuf(b=>({...b,symbol:v}))} className="text"/>:<span className={`symbol-badge ${cash?'cash-badge':''}`}>{row.symbol}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing&&!cash?<EditCell value={buf.exchange} onChange={v=>setEditBuf(b=>({...b,exchange:v}))} className="text"/>:<span className="exchange-tag">{row.exchange}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py,maxWidth:200}}>
+                    {editing&&!cash?<EditCell value={buf.name} onChange={v=>setEditBuf(b=>({...b,name:v}))} className="text"/>:<span style={{fontSize:13}}>{row.name}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.brokerage} onChange={v=>setEditBuf(b=>({...b,brokerage:v}))} className="text"/>:<span style={{fontSize:12,color:'var(--slate)'}}>{row.brokerage}</span>}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing&&!cash?<EditCell value={buf.shares} onChange={v=>setEditBuf(b=>({...b,shares:v}))} type="number"/>:cash?'—':fmtN(row.shares)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing&&!cash?<EditCell value={buf.avgCost} onChange={v=>setEditBuf(b=>({...b,avgCost:v}))} type="number"/>:cash?'—':fmt$(row.avgCost)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing&&cash?<EditCell value={buf.cashValue??cashValue} onChange={v=>setEditBuf(b=>({...b,cashValue:v}))} type="number"/>:fmt$(row.totalCost)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing&&!cash?<EditCell value={buf.price} onChange={v=>setEditBuf(b=>({...b,price:v}))} type="number"/>:cash?'—':fmt$(row.price)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py,fontWeight:400}}>{fmt$(row.marketValue)}</td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {cash?'—':highlightGains?<GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={false}/>:<span className={row.gainLoss>=0?'gain-pos':'gain-neg'}>{fmt$(row.gainLoss)}</span>}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {cash?'—':highlightGains?<GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={true}/>:<span className={row.gainLoss>=0?'gain-pos':'gain-neg'}>{fmtGainPct(row.gainLossPct)}</span>}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {cash||row.dayChangePct==null?'—':highlightGains?<GainBadge value={row.dayChangePct} pct={row.dayChangePct} showPct={true}/>:<span className={row.dayChangePct>=0?'gain-pos':'gain-neg'}>{fmtGainPct(row.dayChangePct)}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.sector} onChange={v=>setEditBuf(b=>({...b,sector:v}))} className="text"/>:<span className="sector-pill">{row.sector}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.altSymbol??''} onChange={v=>setEditBuf(b=>({...b,altSymbol:v}))} className="text"/>:<span className="notes-text">{row.altSymbol||<span style={{opacity:0.3}}>—</span>}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.notes} onChange={v=>setEditBuf(b=>({...b,notes:v}))} className="text"/>:<span className="notes-text">{row.notes||<span style={{opacity:0.3}}>—</span>}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing&&!cash?<EditCell value={buf.dateIn} onChange={v=>setEditBuf(b=>({...b,dateIn:v}))} className="text"/>:
+                      row.dateIn?<span className="date-text">{fmtDate(row.dateIn)}</span>:<span style={{opacity:0.3}}>—</span>}
+                  </td>
+                  <td style={{textAlign:'center',paddingTop:py,paddingBottom:py}}>
+                    <div className="actions-cell" style={{justifyContent:'center'}}>
+                      {editing?(
+                        <><button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button><button className="btn btn-ghost btn-sm" onClick={cancelEdit}>✕</button></>
+                      ):(
+                        <><button className="btn btn-icon btn-sm" onClick={()=>startEdit(row)} title="Edit">✎</button>
+                        {!cash&&<button className="btn btn-icon btn-sm" style={{color:'#2874ad',borderColor:'rgba(43,145,223,0.35)'}} onClick={()=>onClosePosition(row)} title="Close Position">C</button>}
+                        {!cash&&<button className="btn btn-danger" onClick={()=>deleteRow(row.id)} title="Delete">✕</button>}</>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {sorted.length===0&&<tr><td colSpan={17} style={{textAlign:'center',padding:'40px',color:'var(--slate)',fontSize:13}}>No positions match your filter.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      <div className="table-footer">
+        <div className="footer-count">{sorted.length} position{sorted.length!==1?'s':''} shown</div>
+        <div style={{display:'flex',gap:32,alignItems:'center'}}>
+          <div className="footer-total">Total Cost: <strong>{fmt$(totals.tc)}</strong></div>
+          <div className="footer-total">Market Value: <strong>{fmt$(totals.mv)}</strong></div>
+          <div className="footer-total">Total G/L: <strong className={totals.gl>=0?'gain-pos':'gain-neg'}>{fmt$(totals.gl)} ({fmtGainPct(totals.glPct)})</strong></div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── RealizedTable ─────────────────────────────────────────────────────────────
+function RealizedTable({rows, setRows, highlightGains, densityMode}) {
+  const [editingId, setEditingId] = useState(null);
+  const [editBuf, setEditBuf] = useState({});
+  const [sortCol, setSortCol] = useState('dateOut');
+  const [sortDir, setSortDir] = useState('desc');
+  const [search, setSearch] = useState('');
+  const [filterSector, setFilterSector] = useState('');
+  const [filterBrokerage, setFilterBrokerage] = useState('');
+
+  const derived = useMemo(()=>rows.map(deriveRealized),[rows]);
+  const sectors = useMemo(()=>[...new Set(rows.map(r=>r.sector).filter(Boolean))].sort(),[rows]);
+  const brokerages = useMemo(()=>[...new Set(rows.map(r=>r.brokerage).filter(Boolean))].sort(),[rows]);
+
+  const filtered = useMemo(()=>{
+    let d = derived;
+    if(search){const q=search.toLowerCase(); d=d.filter(r=>[r.symbol,r.name,r.brokerage,r.sector,r.notes].some(v=>v&&v.toLowerCase().includes(q)));}
+    if(filterSector) d=d.filter(r=>r.sector===filterSector);
+    if(filterBrokerage) d=d.filter(r=>r.brokerage===filterBrokerage);
+    return d;
+  },[derived,search,filterSector,filterBrokerage]);
+
+  const sorted = useMemo(()=>[...filtered].sort((a,b)=>{
+    let av=a[sortCol],bv=b[sortCol];
+    if(av==null)return 1;if(bv==null)return -1;
+    if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}
+    return sortDir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);
+  }),[filtered,sortCol,sortDir]);
+
+  const totals = useMemo(()=>{
+    const tc=derived.reduce((s,r)=>s+(r.totalCost||0),0);
+    const ti=derived.reduce((s,r)=>s+(r.totalInflow||0),0);
+    const gl=ti-tc; const glPct=tc>0?(gl/tc)*100:0;
+    return {tc,ti,gl,glPct};
+  },[derived]);
+
+  const handleSort=col=>{if(sortCol===col)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortCol(col);setSortDir('asc');}};
+  const startEdit=row=>{setEditingId(row.id);setEditBuf({...row});};
+  const cancelEdit=()=>{setEditingId(null);setEditBuf({});};
+  const saveEdit=()=>{setRows(rs=>rs.map(r=>r.id===editingId?{...editBuf}:r));setEditingId(null);setEditBuf({});};
+  const deleteRow=id=>{setRows(rs=>rs.filter(r=>r.id!==id));if(editingId===id)cancelEdit();};
+
+  const th=(label,col,align='right')=>(
+    <th style={{textAlign:align}} className={sortCol===col?'sorted':''} onClick={()=>handleSort(col)}>
+      {label}<span className="sort-icon">{sortCol===col?(sortDir==='asc'?'↑':'↓'):'↕'}</span>
+    </th>
+  );
+  const py=densityMode==='compact'?'7px':densityMode==='comfortable'?'15px':'11px';
+
+  return (
+    <>
+      <div style={{display:'flex',alignItems:'center',padding:'10px 16px',borderBottom:'1px solid var(--border)',background:'#fff'}}>
+        <div className="toolbar-left">
+          <div className="search-wrap">
+            <span className="search-icon">⌕</span>
+            <input className="search-input" placeholder="Search realized positions…" value={search} onChange={e=>setSearch(e.target.value)} />
+          </div>
+          <select className="filter-select" value={filterSector} onChange={e=>setFilterSector(e.target.value)}>
+            <option value="">All Sectors</option>
+            {sectors.map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+          <select className="filter-select" value={filterBrokerage} onChange={e=>setFilterBrokerage(e.target.value)}>
+            <option value="">All Brokerages</option>
+            {brokerages.map(b=><option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="table-scroll">
+        <table>
+          <thead><tr>
+            {th('Date In','dateIn','left')}
+            {th('Date Out','dateOut','left')}
+            {th('Symbol','symbol','left')}
+            {th('Exchange','exchange','left')}
+            {th('Company','name','left')}
+            {th('Brokerage','brokerage','left')}
+            {th('Shares','shares')}
+            {th('Avg Cost','avgCost')}
+            {th('Total Cost','totalCost')}
+            {th('Avg Sell','avgSell')}
+            {th('Total Inflow','totalInflow')}
+            {th('Gain / Loss','gainLoss')}
+            {th('G/L %','gainLossPct')}
+            {th('Sector','sector','left')}
+            <th style={{textAlign:'left'}}>Alt Symbol</th>
+            <th style={{textAlign:'left'}}>Notes</th>
+            <th style={{textAlign:'center',width:80}}>Actions</th>
+          </tr></thead>
+          <tbody>
+            {sorted.map(row=>{
+              const editing=editingId===row.id;
+              const buf=editBuf;
+              return (
+                <tr key={row.id} className={editing?'editing':''}>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.dateIn} onChange={v=>setEditBuf(b=>({...b,dateIn:v}))} className="text"/>:
+                      row.dateIn?<span className="date-text">{fmtDate(row.dateIn)}</span>:<span style={{opacity:0.3}}>—</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.dateOut} onChange={v=>setEditBuf(b=>({...b,dateOut:v}))} className="text"/>:
+                      row.dateOut?<span className="date-text">{fmtDate(row.dateOut)}</span>:<span style={{opacity:0.3}}>—</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.symbol} onChange={v=>setEditBuf(b=>({...b,symbol:v}))} className="text"/>:<span className="symbol-badge">{row.symbol}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.exchange} onChange={v=>setEditBuf(b=>({...b,exchange:v}))} className="text"/>:<span className="exchange-tag">{row.exchange}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py,maxWidth:200}}>
+                    {editing?<EditCell value={buf.name} onChange={v=>setEditBuf(b=>({...b,name:v}))} className="text"/>:<span style={{fontSize:13}}>{row.name}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.brokerage} onChange={v=>setEditBuf(b=>({...b,brokerage:v}))} className="text"/>:<span style={{fontSize:12,color:'var(--slate)'}}>{row.brokerage}</span>}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.shares} onChange={v=>setEditBuf(b=>({...b,shares:v}))} type="number"/>:fmtN(row.shares)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.avgCost} onChange={v=>setEditBuf(b=>({...b,avgCost:v}))} type="number"/>:fmt$(row.avgCost)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>{fmt$(row.totalCost)}</td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.avgSell} onChange={v=>setEditBuf(b=>({...b,avgSell:v}))} type="number"/>:fmt$(row.avgSell)}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py,fontWeight:400}}>{fmt$(row.totalInflow)}</td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {highlightGains?<GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={false}/>:<span className={row.gainLoss>=0?'gain-pos':'gain-neg'}>{fmt$(row.gainLoss)}</span>}
+                  </td>
+                  <td style={{textAlign:'right',paddingTop:py,paddingBottom:py}}>
+                    {highlightGains?<GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={true}/>:<span className={row.gainLoss>=0?'gain-pos':'gain-neg'}>{fmtGainPct(row.gainLossPct)}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.sector} onChange={v=>setEditBuf(b=>({...b,sector:v}))} className="text"/>:<span className="sector-pill">{row.sector}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.altSymbol??''} onChange={v=>setEditBuf(b=>({...b,altSymbol:v}))} className="text"/>:<span className="notes-text">{row.altSymbol||<span style={{opacity:0.3}}>—</span>}</span>}
+                  </td>
+                  <td className="text-col" style={{paddingTop:py,paddingBottom:py}}>
+                    {editing?<EditCell value={buf.notes} onChange={v=>setEditBuf(b=>({...b,notes:v}))} className="text"/>:<span className="notes-text">{row.notes||<span style={{opacity:0.3}}>—</span>}</span>}
+                  </td>
+                  <td style={{textAlign:'center',paddingTop:py,paddingBottom:py}}>
+                    <div className="actions-cell" style={{justifyContent:'center'}}>
+                      {editing?(
+                        <><button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button><button className="btn btn-ghost btn-sm" onClick={cancelEdit}>✕</button></>
+                      ):(
+                        <><button className="btn btn-icon btn-sm" onClick={()=>startEdit(row)} title="Edit">✎</button>
+                        <button className="btn btn-danger" onClick={()=>deleteRow(row.id)} title="Delete">✕</button></>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {sorted.length===0&&<tr><td colSpan={17} style={{textAlign:'center',padding:'40px',color:'var(--slate)',fontSize:13}}>No realized positions yet.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      <div className="table-footer">
+        <div className="footer-count">{sorted.length} position{sorted.length!==1?'s':''} shown</div>
+        <div style={{display:'flex',gap:32,alignItems:'center'}}>
+          <div className="footer-total">Total Cost: <strong>{fmt$(totals.tc)}</strong></div>
+          <div className="footer-total">Total Inflow: <strong>{fmt$(totals.ti)}</strong></div>
+          <div className="footer-total">Realized G/L: <strong className={totals.gl>=0?'gain-pos':'gain-neg'}>{fmt$(totals.gl)} ({fmtGainPct(totals.glPct)})</strong></div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [rows, setRows] = useState(()=>{
+    try{
+      const ver=localStorage.getItem('pt_version');
+      const s=localStorage.getItem('pt_rows');
+      if(ver!=='3'||!s){localStorage.setItem('pt_version','3');return SEED;}
+      return JSON.parse(s).map(r=>({dayChangePct:null,dateIn:null,...r}));
+    }catch{return SEED;}
+  });
+  const [realizedRows, setRealizedRows] = useState(()=>{
+    try{const s=localStorage.getItem('pt_realized');return s?JSON.parse(s):REALIZED_SEED;}catch{return REALIZED_SEED;}
+  });
+  const [cashValue, setCashValue] = useState(()=>{
+    try{const s=localStorage.getItem('pt_cash');return s?parseFloat(s):SEED_CASH;}catch{return SEED_CASH;}
+  });
+  const [activeTab, setActiveTab] = useState('portfolio');
+  const [showAddPosition, setShowAddPosition] = useState(false);
+  const [showAddRealized, setShowAddRealized] = useState(false);
+  const [closingRow, setClosingRow] = useState(null); // row being closed → pre-fills AddRealized
+
+  const handleClosePosition = row => { setClosingRow(row); };
+  const handleSaveRealized = r => {
+    setRealizedRows(rs=>[...rs,r]);
+    if(closingRow) { setRows(rs=>rs.filter(p=>p.id!==closingRow.id)); setClosingRow(null); }
+  };
+  const [summaryVisible, setSummaryVisible] = useState(true);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+  const [highlightGains, setHighlightGains] = useState(true);
+  const [densityMode, setDensityMode] = useState('normal');
+
+  useEffect(()=>{localStorage.setItem('pt_rows',JSON.stringify(rows));},[rows]);
+  useEffect(()=>{localStorage.setItem('pt_realized',JSON.stringify(realizedRows));},[realizedRows]);
+  useEffect(()=>{localStorage.setItem('pt_cash',String(cashValue));},[cashValue]);
+  useEffect(()=>{localStorage.setItem('pt_tab',activeTab);},[activeTab]);
+
+  useEffect(()=>{
+    const handler=e=>{
+      if(e.data?.type==='__activate_edit_mode')setTweaksVisible(true);
+      if(e.data?.type==='__deactivate_edit_mode')setTweaksVisible(false);
+    };
+    window.addEventListener('message',handler);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return()=>window.removeEventListener('message',handler);
+  },[]);
+
+  const openPositions = useMemo(()=>rows.filter(r=>r.symbol==='CASH'||!r.dateOut),[rows]);
+
+  const totals = useMemo(()=>{
+    const derived=rows.map(r=>deriveRow(r,cashValue));
+    const mv=derived.reduce((s,r)=>s+(r.marketValue||0),0);
+    const tc=derived.reduce((s,r)=>s+(r.totalCost||0),0);
+    const gl=mv-tc; const glPct=tc>0?(gl/tc)*100:0;
+    const positions=derived.filter(r=>r.symbol!=='CASH').length;
+    return{mv,tc,gl,glPct,positions};
+  },[rows,cashValue]);
+
+  const realizedTotals = useMemo(()=>{
+    const d=realizedRows.map(deriveRealized);
+    const gl=d.reduce((s,r)=>s+(r.gainLoss||0),0);
+    return{gl,count:d.length};
+  },[realizedRows]);
+
+  return (
+    <>
+      <nav className="nav">
+        <div className="nav-brand"><div className="nav-brand-dot"/>Portfolio Tracker</div>
+        <div className="nav-actions">
+          <button className="btn btn-icon btn-sm" onClick={()=>alert('Export coming soon')}>Export CSV</button>
+          {activeTab==='portfolio'
+            ?<button className="btn btn-primary btn-sm" onClick={()=>setShowAddPosition(true)}>+ Add Position</button>
+            :<button className="btn btn-primary btn-sm" onClick={()=>setShowAddRealized(true)}>+ Add Realized</button>
+          }
+        </div>
+      </nav>
+
+      <main className="main">
+        <div className="page-header">
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div className="page-title">Portfolio Overview</div>
+              <button
+                onClick={()=>setSummaryVisible(v=>!v)}
+                title={summaryVisible?'Hide summary':'Show summary'}
+                style={{background:'none',border:'none',cursor:'pointer',padding:'4px 6px',borderRadius:4,color:'var(--slate)',fontSize:16,lineHeight:'32px',transition:'color 0.15s,background 0.15s',display:'flex',alignItems:'center',alignSelf:'stretch'}}
+                onMouseEnter={e=>{e.currentTarget.style.background='#eef2f8';e.currentTarget.style.color='var(--navy)';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='var(--slate)';}}
+              >
+                {summaryVisible ? '▼' : '▶'}
+              </button>
+            </div>
+            <div className="page-subtitle">As of {new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+          </div>
+        </div>
+
+        {summaryVisible && <div className="summary-grid">
+          <SummaryCard label="Total Market Value" value={fmt$(totals.mv)} sub={`Cost basis ${fmt$(totals.tc)}`}/>
+          <SummaryCard label="Total Gain / Loss" value={<span className={totals.gl>=0?'gain-pos':'gain-neg'}>{fmt$(totals.gl)}</span>} sub={fmtGainPct(totals.glPct)} subClass={totals.gl>=0?'gain-pos':'gain-neg'}/>
+          <SummaryCard label="Positions" value={totals.positions} sub="+ 1 cash position"/>
+          <SummaryCard label="Realized G/L" value={<span className={realizedTotals.gl>=0?'gain-pos':'gain-neg'}>{fmt$(realizedTotals.gl)}</span>} sub={`Across ${realizedTotals.count} closed position${realizedTotals.count!==1?'s':''}`} subClass={realizedTotals.gl>=0?'gain-pos':'gain-neg'}/>
+        </div>}
+
+        <div className="table-wrap">
+          <div className="tabs-bar">
+            <div className="tabs-left">
+              <button className={`tab-btn ${activeTab==='portfolio'?'active':''}`} onClick={()=>setActiveTab('portfolio')}>
+                Portfolio <span className="tab-count">{openPositions.length}</span>
+              </button>
+              <button className={`tab-btn ${activeTab==='realized'?'active':''}`} onClick={()=>setActiveTab('realized')}>
+                Realized Gains / Losses <span className="tab-count">{realizedRows.length}</span>
+              </button>
+            </div>
+          </div>
+
+          {activeTab==='portfolio'
+            ?<PortfolioTable rows={openPositions} cashValue={cashValue} setCashValue={setCashValue} setRows={setRows} highlightGains={highlightGains} densityMode={densityMode} onClosePosition={handleClosePosition}/>
+            :<RealizedTable rows={realizedRows} setRows={setRealizedRows} highlightGains={highlightGains} densityMode={densityMode}/>
+          }
+        </div>
+      </main>
+
+      {showAddPosition&&<AddPositionModal onClose={()=>setShowAddPosition(false)} onSave={r=>setRows(rs=>[...rs,r])}/>}
+      {(showAddRealized||closingRow)&&<AddRealizedModal
+        onClose={()=>{setShowAddRealized(false);setClosingRow(null);}}
+        onSave={r=>{handleSaveRealized(r);setShowAddRealized(false);}}
+        initialData={closingRow||null}
+      />}
+
+      {tweaksVisible&&(
+        <div className="tweaks-panel">
+          <div className="tweaks-title">Tweaks</div>
+          <div className="tweak-row">
+            <span className="tweak-label">Highlight gains/losses</span>
+            <button className={`tweak-toggle ${highlightGains?'on':'off'}`} onClick={()=>setHighlightGains(v=>!v)}/>
+          </div>
+          <div className="tweak-row">
+            <span className="tweak-label">Row density</span>
+            <select className="tweak-select" value={densityMode} onChange={e=>setDensityMode(e.target.value)}>
+              <option value="compact">Compact</option>
+              <option value="normal">Normal</option>
+              <option value="comfortable">Comfortable</option>
+            </select>
+          </div>
+          <div className="tweak-divider"/>
+          <div style={{fontSize:11,color:'var(--slate)'}}>Changes apply live</div>
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
+

@@ -25,7 +25,22 @@
       "Bash(curl -sv \"http://localhost:5174/portfolio.csv\")",
       "Bash(node --input-type=module)",
       "Bash(netstat -ano)",
-      "Bash(findstr :5176)"
+      "Bash(findstr :5176)",
+      "Bash(curl -s \"http://localhost:3001/api/quotes?symbols=NOK,AAPL\")",
+      "Bash(curl -s -A \"Mozilla/5.0\" \"https://finance.yahoo.com/\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(node server.js)",
+      "Bash(curl -s \"http://localhost:3001/api/quotes?symbols=NOK,AAPL,MSFT\")",
+      "Bash(npx kill-port *)",
+      "Bash(curl -s \"http://localhost:3001/api/quotes?symbols=NOK,AAPL,MSFT,NVDA\")",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node -e \"const fmtTime = d => { const h = d.getHours\\(\\), m = d.getMinutes\\(\\), s = d.getSeconds\\(\\); return \\\\`\\\\${String\\(h % 12 || 12\\).padStart\\(2,'0'\\)}:\\\\${String\\(m\\).padStart\\(2,'0'\\)}:\\\\${String\\(s\\).padStart\\(2,'0'\\)} \\\\${h >= 12 ? 'PM' : 'AM'}\\\\`; }; console.log\\(fmtTime\\(new Date\\(2026,3,23,14,5,9\\)\\)\\); console.log\\(fmtTime\\(new Date\\(2026,3,23,0,5,9\\)\\)\\); console.log\\(fmtTime\\(new Date\\(2026,3,23,12,0,0\\)\\)\\); console.log\\(fmtTime\\(new Date\\(2026,3,23,9,30,45\\)\\)\\);\")",
+      "Bash(python -c \"import zipfile, sys; z=zipfile.ZipFile\\('design/Portfolio Tracker-handoff.zip'\\); [print\\(i.filename\\) for i in z.infolist\\(\\)]\")",
+      "Bash(powershell.exe -command 'Add-Type -Assembly System.IO.Compression.FileSystem; $z=[System.IO.Compression.ZipFile]::OpenRead\\('\\\\''C:\\\\Users\\\\dhaye\\\\repos\\\\portfolio-tracker\\\\design\\\\Portfolio Tracker-handoff.zip'\\\\''\\); $z.Entries | Select-Object FullName')",
+      "Bash(python -c ' *)",
+      "Bash(powershell.exe -command ' *)",
+      "Bash(npx vite *)"
     ]
   }
 }
