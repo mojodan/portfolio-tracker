@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { csvToObjects, num } from './lib/csv.js';
 
 function objectsToCsv(headers, rows) {
@@ -11,23 +11,24 @@ function objectsToCsv(headers, rows) {
 }
 
 function portfolioRowsToCsv(rows) {
-  const H = ['Symbol', 'Exchange', 'Company', 'Brokerage', 'Shares', 'Avg Cost', 'Total Cost', 'Cur. Price', 'Mkt Value', 'Sector', 'Alt Symbol', 'Notes', 'Date In'];
+  const H = ['Symbol', 'Exchange', 'Company', 'Brokerage', 'Shares', 'Avg Cost', 'Total Cost', 'Cur. Price', 'Mkt Value', 'Sector', 'Alt Symbol', 'Referrer', 'Notes', 'Date In'];
   return objectsToCsv(H, rows.map(r => ({
     Symbol: r.symbol ?? '', Exchange: r.exchange ?? '', Company: r.name ?? '', Brokerage: r.brokerage ?? '',
     Shares: r.isCash ? '' : (r.shares ?? ''), 'Avg Cost': r.isCash ? '' : (r.avgCost ?? ''),
     'Total Cost': r.totalCost ?? '', 'Cur. Price': r.isCash ? '' : (r.price ?? ''),
-    'Mkt Value': r.marketValue ?? '', Sector: r.sector ?? '', 'Alt Symbol': r.altSymbol ?? '', Notes: r.notes ?? '', 'Date In': r.dateIn ?? ''
+    'Mkt Value': r.marketValue ?? '', Sector: r.sector ?? '', 'Alt Symbol': r.altSymbol ?? '', Referrer: r.referrer ?? '', Notes: r.notes ?? '', 'Date In': r.dateIn ?? ''
   })));
 }
 
 function realizedRowsToCsv(rows) {
-  const H = ['Date In', 'Date Out', 'Symbol', 'Exchange', 'Company', 'Brokerage', 'Shares', 'Avg Cost', 'Total Cost', 'Avg Sell', 'Total Inflow', 'Gain / Loss', 'G/L %', 'Sector', 'Alt Symbol', 'Notes'];
+  const H = ['Date In', 'Date Out', 'Symbol', 'Exchange', 'Company', 'Brokerage', 'Shares', 'Avg Cost', 'Total Cost', 'Avg Sell', 'Fees', 'Total Inflow', 'Gain / Loss', 'G/L %', 'Sector', 'Alt Symbol', 'Referrer', 'Notes'];
   return objectsToCsv(H, rows.map(r => ({
     'Date In': r.dateIn ?? '', 'Date Out': r.dateOut ?? '', Symbol: r.symbol ?? '', Exchange: r.exchange ?? '',
     Company: r.name ?? '', Brokerage: r.brokerage ?? '', Shares: r.shares ?? '',
     'Avg Cost': r.avgCost ?? '', 'Total Cost': r.totalCost ?? '', 'Avg Sell': r.avgSell ?? '',
+    'Fees': r.fees ?? 0,
     'Total Inflow': r.totalInflow ?? '', 'Gain / Loss': r.gainLoss ?? '', 'G/L %': r.gainLossPct ?? '',
-    Sector: r.sector ?? '', 'Alt Symbol': r.altSymbol ?? '', Notes: r.notes ?? ''
+    Sector: r.sector ?? '', 'Alt Symbol': r.altSymbol ?? '', Referrer: r.referrer ?? '', Notes: r.notes ?? ''
   })));
 }
 
@@ -49,7 +50,7 @@ function makeCashRow(brokerage, id) {
     totalCost: 0, marketValue: 0,
     gainLoss: 0, gainLossPct: 0,
     dayChangePct: null, dayGainLoss: null, sector: 'Cash',
-    altSymbol: '', notes: '', dateIn: null, isCash: true
+    altSymbol: '', referrer: '', notes: '', dateIn: null, isCash: true
   };
 }
 
@@ -88,6 +89,7 @@ function parsePortfolio(raw) {
       dayChangePct: null, dayGainLoss: null,
       sector: r['Sector'],
       altSymbol: r['Alt Symbol'] || '',
+      referrer: r['Referrer'] || '',
       notes: r['Notes'],
       dateIn: r['Date In'] || null,
       isCash
@@ -100,8 +102,9 @@ function parseRealized(raw) {
     const shares = num(r['Shares']);
     const avgCost = num(r['Avg Cost']);
     const avgSell = num(r['Avg Sell']);
+    const fees = num(r['Fees']) ?? 0;
     const totalCost = num(r['Total Cost']) ?? (shares != null && avgCost != null ? shares * avgCost : null);
-    const totalInflow = num(r['Total Inflow']) ?? (shares != null && avgSell != null ? shares * avgSell : null);
+    const totalInflow = num(r['Total Inflow']) ?? (shares != null && avgSell != null ? shares * avgSell - fees : null);
     const gainLoss = num(r['Gain / Loss']) ?? (totalInflow != null && totalCost != null ? totalInflow - totalCost : null);
     const gainLossPct = num(r['G/L %']) ?? (gainLoss != null && totalCost && totalCost > 0 ? (gainLoss / totalCost) * 100 : null);
     return {
@@ -112,11 +115,12 @@ function parseRealized(raw) {
       exchange: r['Exchange'],
       name: r['Company'],
       brokerage: r['Brokerage'],
-      shares, avgCost, avgSell,
+      shares, avgCost, avgSell, fees,
       totalCost, totalInflow,
       gainLoss, gainLossPct,
       sector: r['Sector'],
       altSymbol: r['Alt Symbol'] || '',
+      referrer: r['Referrer'] || '',
       notes: r['Notes']
     };
   });
@@ -162,7 +166,7 @@ function SortableTh({ label, col, align = 'right', sortCol, sortDir, onSort, wid
 
 function AddPositionModal({ onClose, onSave }) {
   const [f, setF] = useState({
-    symbol: '', exchange: '', altSymbol: '', name: '', brokerage: '',
+    symbol: '', exchange: '', altSymbol: '', referrer: '', name: '', brokerage: '',
     shares: '', avgCost: '', price: '', sector: '', notes: '', dateIn: ''
   });
   const set = k => v => setF(p => ({ ...p, [k]: v }));
@@ -178,7 +182,7 @@ function AddPositionModal({ onClose, onSave }) {
     const gainLossPct = gainLoss != null && totalCost && totalCost > 0 ? (gainLoss / totalCost) * 100 : null;
     onSave({
       symbol: f.symbol.trim().toUpperCase(), exchange: f.exchange.trim(),
-      altSymbol: f.altSymbol.trim(), name: f.name.trim(), brokerage: f.brokerage.trim(),
+      altSymbol: f.altSymbol.trim(), referrer: f.referrer.trim(), name: f.name.trim(), brokerage: f.brokerage.trim(),
       shares, avgCost, price, totalCost, marketValue, gainLoss, gainLossPct,
       dayChangePct: null, dayGainLoss: null, sector: f.sector.trim(), notes: f.notes.trim(),
       dateIn: f.dateIn || null, isCash: false
@@ -196,7 +200,7 @@ function AddPositionModal({ onClose, onSave }) {
         <div className="form-grid">
           {[
             ['symbol', 'Symbol', 'text'], ['exchange', 'Exchange', 'text'],
-            ['altSymbol', 'Alt Symbol', 'text'],
+            ['altSymbol', 'Alt Symbol', 'text'], ['referrer', 'Referrer', 'text'],
             ['name', 'Company Name', 'text'], ['brokerage', 'Brokerage', 'text'],
             ['shares', 'Shares', 'number'], ['avgCost', 'Avg Cost ($)', 'number'],
             ['price', 'Current Price ($)', 'number'], ['sector', 'Sector', 'text'],
@@ -231,11 +235,13 @@ function AddRealizedModal({ onClose, onSave, initialData }) {
     symbol: initialData?.symbol || '',
     exchange: initialData?.exchange || '',
     altSymbol: initialData?.altSymbol || '',
+    referrer: initialData?.referrer || '',
     name: initialData?.name || '',
     brokerage: initialData?.brokerage || '',
     shares: initialData?.shares != null ? String(initialData.shares) : '',
     avgCost: initialData?.avgCost != null ? String(initialData.avgCost) : '',
     avgSell: initialData?.price != null ? String(initialData.price) : '',
+    fees: '',
     sector: initialData?.sector || '',
     notes: initialData?.notes || '',
     dateIn: initialData?.dateIn || '',
@@ -249,13 +255,14 @@ function AddRealizedModal({ onClose, onSave, initialData }) {
     const shares = f.shares ? parseFloat(f.shares) : null;
     const avgCost = f.avgCost ? parseFloat(f.avgCost) : null;
     const avgSell = parseFloat(f.avgSell);
+    const fees = f.fees ? parseFloat(f.fees) : 0;
     const totalCost = shares != null && avgCost != null ? shares * avgCost : null;
-    const totalInflow = shares != null ? shares * avgSell : null;
+    const totalInflow = shares != null ? shares * avgSell - fees : null;
     const gainLoss = totalInflow != null && totalCost != null ? totalInflow - totalCost : null;
     const gainLossPct = gainLoss != null && totalCost && totalCost > 0 ? (gainLoss / totalCost) * 100 : null;
     onSave({
-      symbol: f.symbol, exchange: f.exchange, altSymbol: f.altSymbol, name: f.name, brokerage: f.brokerage,
-      shares, avgCost, avgSell, totalCost, totalInflow, gainLoss, gainLossPct,
+      symbol: f.symbol, exchange: f.exchange, altSymbol: f.altSymbol, referrer: f.referrer, name: f.name, brokerage: f.brokerage,
+      shares, avgCost, avgSell, fees, totalCost, totalInflow, gainLoss, gainLossPct,
       sector: f.sector, notes: f.notes, dateIn: f.dateIn || null, dateOut: f.dateOut,
     });
     onClose();
@@ -271,10 +278,11 @@ function AddRealizedModal({ onClose, onSave, initialData }) {
         <div className="form-grid">
           {[
             ['symbol', 'Symbol', 'text'], ['exchange', 'Exchange', 'text'],
-            ['altSymbol', 'Alt Symbol', 'text'],
+            ['altSymbol', 'Alt Symbol', 'text'], ['referrer', 'Referrer', 'text'],
             ['name', 'Company Name', 'text'], ['brokerage', 'Brokerage', 'text'],
             ['shares', 'Shares', 'number'], ['avgCost', 'Avg Cost ($)', 'number'],
-            ['avgSell', 'Avg Sell Price ($)', 'number'], ['sector', 'Sector', 'text'],
+            ['avgSell', 'Avg Sell Price ($)', 'number'], ['fees', 'Fees ($)', 'number'],
+            ['sector', 'Sector', 'text'],
             ['dateIn', 'Date In', 'date'], ['dateOut', 'Date Out', 'date'],
           ].map(([k, label, type]) => {
             const required = k === 'avgSell' || k === 'dateOut';
@@ -303,7 +311,7 @@ function AddRealizedModal({ onClose, onSave, initialData }) {
   );
 }
 
-function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
+function PortfolioTable({ rows, setPortfolio, onClose, onDelete, onSave, viewSymbolURL }) {
   const [editingId, setEditingId] = useState(null);
   const [editBuf, setEditBuf] = useState({});
   const [sortCol, setSortCol] = useState('symbol');
@@ -311,6 +319,7 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
   const [search, setSearch] = useState('');
   const [filterSector, setFilterSector] = useState('');
   const [filterBrokerage, setFilterBrokerage] = useState('');
+  const [filterReferrer, setFilterReferrer] = useState('');
 
   const startEdit = row => { setEditingId(row.id); setEditBuf({ ...row }); };
   const cancelEdit = () => { setEditingId(null); setEditBuf({}); };
@@ -330,7 +339,9 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
       const gainLossPct = gainLoss != null && totalCost && totalCost > 0 ? (gainLoss / totalCost) * 100 : null;
       updated = { ...editBuf, shares, avgCost, price, totalCost, marketValue, gainLoss, gainLossPct };
     }
-    setPortfolio(rs => rs.map(r => r.id === editingId ? updated : r));
+    const newRows = rows.map(r => r.id === editingId ? updated : r);
+    setPortfolio(newRows);
+    onSave(newRows);
     setEditingId(null);
     setEditBuf({});
   };
@@ -338,6 +349,7 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
 
   const sectors = useMemo(() => [...new Set(rows.map(r => r.sector).filter(Boolean))].sort(), [rows]);
   const brokerages = useMemo(() => [...new Set(rows.map(r => r.brokerage).filter(Boolean))].sort(), [rows]);
+  const referrers = useMemo(() => [...new Set(rows.map(r => r.referrer).filter(Boolean))].sort(), [rows]);
 
   const filtered = useMemo(() => {
     let d = rows;
@@ -347,8 +359,9 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
     }
     if (filterSector) d = d.filter(r => r.sector === filterSector);
     if (filterBrokerage) d = d.filter(r => r.brokerage === filterBrokerage);
+    if (filterReferrer) d = d.filter(r => r.referrer === filterReferrer);
     return d;
-  }, [rows, search, filterSector, filterBrokerage]);
+  }, [rows, search, filterSector, filterBrokerage, filterReferrer]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (a.isCash && b.isCash) return (a.brokerage || '').localeCompare(b.brokerage || '');
@@ -362,12 +375,12 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
   }), [filtered, sortCol, sortDir]);
 
   const totals = useMemo(() => {
-    const mv = rows.reduce((s, r) => s + (r.marketValue || 0), 0);
-    const tc = rows.reduce((s, r) => s + (r.totalCost || 0), 0);
+    const mv = sorted.reduce((s, r) => s + (r.marketValue || 0), 0);
+    const tc = sorted.reduce((s, r) => s + (r.totalCost || 0), 0);
     const gl = mv - tc;
     const glPct = tc > 0 ? (gl / tc) * 100 : 0;
     return { mv, tc, gl, glPct };
-  }, [rows]);
+  }, [sorted]);
 
   const handleSort = col => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -394,6 +407,10 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
             <option value="">All Brokerages</option>
             {brokerages.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
+          <select className="filter-select" value={filterReferrer} onChange={e => setFilterReferrer(e.target.value)}>
+            <option value="">All Referrers</option>
+            {referrers.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
         </div>
       </div>
       <div className="table-scroll">
@@ -410,9 +427,10 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
             {Th('Mkt Value', 'marketValue')}
             {Th('Gain / Loss', 'gainLoss')}
             {Th('G/L %', 'gainLossPct')}
-            {Th('1-Day G/L %', 'dayChangePct')}
+            {Th('1-Day G/L', 'dayChangePct')}
             {Th('Sector', 'sector', 'left')}
             {Th('Alt Symbol', 'altSymbol', 'left')}
+            {Th('Referrer', 'referrer', 'left')}
             <th style={{ textAlign: 'left' }}>Notes</th>
             {Th('Date In', 'dateIn', 'left')}
             <th style={{ textAlign: 'center', width: 110 }}>Actions</th>
@@ -425,7 +443,14 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
               return (
                 <tr key={row.id} className={`${cash ? 'cash-row' : ''} ${editing ? 'editing' : ''}`}>
                   <td className="text-col">
-                    {editing ? <EditCell value={buf.symbol} onChange={set('symbol')} className="text" /> : <span className={`symbol-badge ${cash ? 'cash-badge' : ''}`}>{row.symbol}</span>}
+                    {editing ? <EditCell value={buf.symbol} onChange={set('symbol')} className="text" /> : (
+                      <span
+                        className={`symbol-badge ${cash ? 'cash-badge' : ''}`}
+                        title={row.notes || undefined}
+                        onClick={!cash && viewSymbolURL ? () => window.open(viewSymbolURL + '?symbol=' + row.symbol, '_blank') : undefined}
+                        style={!cash && viewSymbolURL ? { cursor: 'pointer' } : undefined}
+                      >{row.symbol}</span>
+                    )}
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.exchange} onChange={set('exchange')} className="text" /> : <span className="exchange-tag">{row.exchange}</span>}
@@ -456,13 +481,27 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
                     {cash ? '—' : <GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={true} />}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    {cash || row.dayChangePct == null ? '—' : <GainBadge value={row.dayChangePct} pct={row.dayChangePct} showPct={true} />}
+                    {(() => {
+                      if (cash || row.dayChangePct == null) return '—';
+                      const ref = row.dayGainLoss ?? row.dayChangePct;
+                      const cls = ref > 0 ? 'pos' : ref < 0 ? 'neg' : 'zero';
+                      const arrow = ref > 0 ? '▲' : ref < 0 ? '▼' : '';
+                      const dollar = row.dayGainLoss != null ? fmt$(row.dayGainLoss) : '';
+                      return (
+                        <span className={`gain-badge ${cls}`}>
+                          {arrow} {dollar}{dollar ? ' ' : ''}({fmtGainPct(row.dayChangePct)})
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.sector} onChange={set('sector')} className="text" /> : <span className="sector-pill">{row.sector}</span>}
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.altSymbol} onChange={set('altSymbol')} className="text" /> : <span style={{ fontSize: 12, color: 'var(--slate)' }}>{row.altSymbol || <span style={{ opacity: 0.3 }}>—</span>}</span>}
+                  </td>
+                  <td className="text-col">
+                    {editing ? <EditCell value={buf.referrer} onChange={set('referrer')} className="text" /> : <span style={{ fontSize: 12, color: 'var(--slate)' }}>{row.referrer || <span style={{ opacity: 0.3 }}>—</span>}</span>}
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.notes} onChange={set('notes')} className="text" /> : <span className="notes-text">{row.notes || <span style={{ opacity: 0.3 }}>—</span>}</span>}
@@ -500,7 +539,7 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
                 </tr>
               );
             })}
-            {sorted.length === 0 && <tr><td colSpan={17} style={{ textAlign: 'center', padding: '40px', color: 'var(--slate)', fontSize: 13 }}>No positions match your filter.</td></tr>}
+            {sorted.length === 0 && <tr><td colSpan={18} style={{ textAlign: 'center', padding: '40px', color: 'var(--slate)', fontSize: 13 }}>No positions match your filter.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -516,7 +555,7 @@ function PortfolioTable({ rows, setPortfolio, onClose, onDelete }) {
   );
 }
 
-function RealizedTable({ rows, setRealized }) {
+function RealizedTable({ rows, setRealized, onSave, viewSymbolURL }) {
   const [editingId, setEditingId] = useState(null);
   const [editBuf, setEditBuf] = useState({});
   const [sortCol, setSortCol] = useState('dateOut');
@@ -524,9 +563,11 @@ function RealizedTable({ rows, setRealized }) {
   const [search, setSearch] = useState('');
   const [filterSector, setFilterSector] = useState('');
   const [filterBrokerage, setFilterBrokerage] = useState('');
+  const [filterReferrer, setFilterReferrer] = useState('');
 
   const sectors = useMemo(() => [...new Set(rows.map(r => r.sector).filter(Boolean))].sort(), [rows]);
   const brokerages = useMemo(() => [...new Set(rows.map(r => r.brokerage).filter(Boolean))].sort(), [rows]);
+  const referrers = useMemo(() => [...new Set(rows.map(r => r.referrer).filter(Boolean))].sort(), [rows]);
 
   const filtered = useMemo(() => {
     let d = rows;
@@ -536,8 +577,9 @@ function RealizedTable({ rows, setRealized }) {
     }
     if (filterSector) d = d.filter(r => r.sector === filterSector);
     if (filterBrokerage) d = d.filter(r => r.brokerage === filterBrokerage);
+    if (filterReferrer) d = d.filter(r => r.referrer === filterReferrer);
     return d;
-  }, [rows, search, filterSector, filterBrokerage]);
+  }, [rows, search, filterSector, filterBrokerage, filterReferrer]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     let av = a[sortCol], bv = b[sortCol];
@@ -566,18 +608,26 @@ function RealizedTable({ rows, setRealized }) {
     const shares = Number(editBuf.shares) || 0;
     const avgCost = Number(editBuf.avgCost) || 0;
     const avgSell = Number(editBuf.avgSell) || 0;
+    const fees = Number(editBuf.fees) || 0;
     const totalCost = shares * avgCost;
-    const totalInflow = shares * avgSell;
+    const totalInflow = shares * avgSell - fees;
     const gainLoss = totalInflow - totalCost;
     const gainLossPct = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
-    setRealized(rs => rs.map(r => r.id === editingId
-      ? { ...editBuf, shares, avgCost, avgSell, totalCost, totalInflow, gainLoss, gainLossPct }
+    const newRows = rows.map(r => r.id === editingId
+      ? { ...editBuf, shares, avgCost, avgSell, fees, totalCost, totalInflow, gainLoss, gainLossPct }
       : r
-    ));
+    );
+    setRealized(newRows);
+    onSave(newRows);
     setEditingId(null);
     setEditBuf({});
   };
-  const deleteRow = id => { setRealized(rs => rs.filter(r => r.id !== id)); if (editingId === id) cancelEdit(); };
+  const deleteRow = id => {
+    const newRows = rows.filter(r => r.id !== id);
+    setRealized(newRows);
+    onSave(newRows);
+    if (editingId === id) cancelEdit();
+  };
 
   const set = key => val => setEditBuf(b => ({ ...b, [key]: val }));
 
@@ -601,6 +651,10 @@ function RealizedTable({ rows, setRealized }) {
             <option value="">All Brokerages</option>
             {brokerages.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
+          <select className="filter-select" value={filterReferrer} onChange={e => setFilterReferrer(e.target.value)}>
+            <option value="">All Referrers</option>
+            {referrers.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
         </div>
       </div>
       <div className="table-scroll">
@@ -616,11 +670,13 @@ function RealizedTable({ rows, setRealized }) {
             {Th('Avg Cost', 'avgCost')}
             {Th('Total Cost', 'totalCost')}
             {Th('Avg Sell', 'avgSell')}
+            {Th('Fees', 'fees')}
             {Th('Total Inflow', 'totalInflow')}
             {Th('Gain / Loss', 'gainLoss')}
             {Th('G/L %', 'gainLossPct')}
             {Th('Sector', 'sector', 'left')}
             {Th('Alt Symbol', 'altSymbol', 'left')}
+            {Th('Referrer', 'referrer', 'left')}
             <th style={{ textAlign: 'left' }}>Notes</th>
             <th style={{ textAlign: 'center', width: 110 }}>Actions</th>
           </tr></thead>
@@ -639,7 +695,13 @@ function RealizedTable({ rows, setRealized }) {
                       row.dateOut ? <span className="date-text">{fmtDate(row.dateOut)}</span> : <span style={{ opacity: 0.3 }}>—</span>}
                   </td>
                   <td className="text-col">
-                    {editing ? <EditCell value={buf.symbol} onChange={set('symbol')} className="text" /> : <span className="symbol-badge">{row.symbol}</span>}
+                    {editing ? <EditCell value={buf.symbol} onChange={set('symbol')} className="text" /> : (
+                      <span
+                        className="symbol-badge"
+                        onClick={viewSymbolURL ? () => window.open(viewSymbolURL + '?symbol=' + row.symbol, '_blank') : undefined}
+                        style={viewSymbolURL ? { cursor: 'pointer' } : undefined}
+                      >{row.symbol}</span>
+                    )}
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.exchange} onChange={set('exchange')} className="text" /> : <span className="exchange-tag">{row.exchange}</span>}
@@ -660,6 +722,9 @@ function RealizedTable({ rows, setRealized }) {
                   <td style={{ textAlign: 'right' }}>
                     {editing ? <EditCell value={buf.avgSell} onChange={set('avgSell')} type="number" /> : fmt$(row.avgSell)}
                   </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {editing ? <EditCell value={buf.fees ?? 0} onChange={set('fees')} type="number" /> : fmt$(row.fees ?? 0)}
+                  </td>
                   <td style={{ textAlign: 'right', fontWeight: 400 }}>{fmt$(row.totalInflow)}</td>
                   <td style={{ textAlign: 'right' }}><GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={false} /></td>
                   <td style={{ textAlign: 'right' }}><GainBadge value={row.gainLoss} pct={row.gainLossPct} showPct={true} /></td>
@@ -668,6 +733,9 @@ function RealizedTable({ rows, setRealized }) {
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.altSymbol} onChange={set('altSymbol')} className="text" /> : <span style={{ fontSize: 12, color: 'var(--slate)' }}>{row.altSymbol || <span style={{ opacity: 0.3 }}>—</span>}</span>}
+                  </td>
+                  <td className="text-col">
+                    {editing ? <EditCell value={buf.referrer} onChange={set('referrer')} className="text" /> : <span style={{ fontSize: 12, color: 'var(--slate)' }}>{row.referrer || <span style={{ opacity: 0.3 }}>—</span>}</span>}
                   </td>
                   <td className="text-col">
                     {editing ? <EditCell value={buf.notes} onChange={set('notes')} className="text" /> : <span className="notes-text">{row.notes || <span style={{ opacity: 0.3 }}>—</span>}</span>}
@@ -690,7 +758,7 @@ function RealizedTable({ rows, setRealized }) {
                 </tr>
               );
             })}
-            {sorted.length === 0 && <tr><td colSpan={17} style={{ textAlign: 'center', padding: '40px', color: 'var(--slate)', fontSize: 13 }}>No realized positions yet.</td></tr>}
+            {sorted.length === 0 && <tr><td colSpan={18} style={{ textAlign: 'center', padding: '40px', color: 'var(--slate)', fontSize: 13 }}>No realized positions yet.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -717,6 +785,13 @@ export default function App() {
   const [quoteStatus, setQuoteStatus] = useState('idle');
   const [quotedAt, setQuotedAt] = useState(null);
   const [summaryVisible, setSummaryVisible] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefreshMinutes, setAutoRefreshMinutes] = useState(5);
+  const [viewSymbolURL, setViewSymbolURL] = useState('');
+  const refreshRef = useRef(null);
+
+  const persistPortfolio = rows => fetch('/savePortfolio', { method: 'POST', headers: { 'Content-Type': 'text/csv' }, body: portfolioRowsToCsv(rows) }).catch(() => {});
+  const persistRealized = rows => fetch('/saveRealized', { method: 'POST', headers: { 'Content-Type': 'text/csv' }, body: realizedRowsToCsv(rows) }).catch(() => {});
 
   const handleAddPosition = async newPos => {
     const newId = portfolio.length > 0 ? Math.max(...portfolio.map(r => r.id)) + 1 : 1;
@@ -733,9 +808,51 @@ export default function App() {
     }
   };
 
+  const handleAddRealized = async realizedData => {
+    const newId = realized.length > 0 ? Math.max(...realized.map(r => r.id)) + 1 : 1;
+    const updatedRealized = [...realized, { ...realizedData, id: newId }];
+    setRealized(updatedRealized);
+    try {
+      await fetch('/saveRealized', { method: 'POST', headers: { 'Content-Type': 'text/csv' }, body: realizedRowsToCsv(updatedRealized) });
+    } catch {
+      // silent fail
+    }
+  };
+
   const handleClosePosition = async realizedData => {
     const newId = realized.length > 0 ? Math.max(...realized.map(r => r.id)) + 1 : 1;
-    const updatedPortfolio = portfolio.filter(r => r.id !== closeRow.id);
+    const closedShares = realizedData.shares ?? closeRow.shares ?? 0;
+    const positionShares = closeRow.shares ?? 0;
+    const isFullClose = closedShares >= positionShares;
+
+    let updatedPortfolio;
+    if (isFullClose) {
+      updatedPortfolio = portfolio.filter(r => r.id !== closeRow.id);
+    } else {
+      const remainingShares = +parseFloat((positionShares - closedShares).toPrecision(10));
+      const avgCost = closeRow.avgCost;
+      const totalCost = avgCost != null ? +(remainingShares * avgCost).toFixed(2) : null;
+      const price = closeRow.price;
+      const marketValue = price != null ? +(remainingShares * price).toFixed(2) : null;
+      const gainLoss = marketValue != null && totalCost != null ? +(marketValue - totalCost).toFixed(2) : null;
+      const gainLossPct = gainLoss != null && totalCost && totalCost > 0 ? +((gainLoss / totalCost) * 100).toFixed(4) : null;
+      updatedPortfolio = portfolio.map(r => r.id === closeRow.id
+        ? { ...r, shares: remainingShares, totalCost, marketValue, gainLoss, gainLossPct }
+        : r
+      );
+    }
+
+    const proceeds = realizedData.totalInflow ?? 0;
+    if (proceeds > 0) {
+      updatedPortfolio = updatedPortfolio.map(r => {
+        if (r.isCash && r.brokerage === closeRow.brokerage) {
+          const newBalance = +((r.marketValue || 0) + proceeds).toFixed(2);
+          return { ...r, totalCost: newBalance, marketValue: newBalance };
+        }
+        return r;
+      });
+    }
+
     const updatedRealized = [...realized, { ...realizedData, id: newId }];
     setPortfolio(updatedPortfolio);
     setRealized(updatedRealized);
@@ -800,16 +917,28 @@ export default function App() {
   useEffect(() => {
     Promise.all([
       fetch('/portfolio.csv').then(r => r.ok ? r.text() : Promise.reject('portfolio.csv not found')),
-      fetch('/realized.csv').then(r => r.ok ? r.text() : Promise.reject('realized.csv not found'))
+      fetch('/realized.csv').then(r => r.ok ? r.text() : Promise.reject('realized.csv not found')),
+      fetch('/api/settings').then(r => r.ok ? r.json() : { summaryVisible: true }).catch(() => ({ summaryVisible: true }))
     ])
-      .then(([p, rz]) => {
+      .then(([p, rz, settings]) => {
         const pRaw = csvToObjects(p);
         const rRaw = csvToObjects(rz);
         setPortfolio(ensureCashRows(parsePortfolio(pRaw.filter(row => !row['Date Out']))));
         setRealized(parseRealized(rRaw));
+        setSummaryVisible(settings.summaryVisible ?? true);
+        setAutoRefreshMinutes(settings.autoRefreshIntervalMinutes ?? 5);
+        setViewSymbolURL(settings.viewSymbolURL ?? '');
       })
       .catch(e => setError(String(e)));
   }, []);
+
+  refreshRef.current = handleRefreshPrices;
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => refreshRef.current(), autoRefreshMinutes * 60 * 1000);
+    return () => clearInterval(id);
+  }, [autoRefresh, autoRefreshMinutes]);
 
   const openPositions = useMemo(() => portfolio || [], [portfolio]);
   const positionRows = useMemo(() => openPositions.filter(r => !r.isCash), [openPositions]);
@@ -832,7 +961,8 @@ export default function App() {
 
   return (
     <>
-      {showAddModal && <AddPositionModal onClose={() => setShowAddModal(false)} onSave={handleAddPosition} />}
+      {showAddModal && activeTab === 'portfolio' && <AddPositionModal onClose={() => setShowAddModal(false)} onSave={handleAddPosition} />}
+      {showAddModal && activeTab === 'realized' && <AddRealizedModal onClose={() => setShowAddModal(false)} onSave={handleAddRealized} />}
       {closeRow && <AddRealizedModal onClose={() => setCloseRow(null)} onSave={handleClosePosition} initialData={closeRow} />}
       <nav className="nav">
         <div className="nav-brand"><div className="nav-brand-dot" />Portfolio Tracker</div>
@@ -850,7 +980,15 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div className="page-title">Portfolio Overview</div>
               <button
-                onClick={() => setSummaryVisible(v => !v)}
+                onClick={() => {
+                  const next = !summaryVisible;
+                  setSummaryVisible(next);
+                  fetch('/saveSettings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summaryVisible: next })
+                  }).catch(() => {});
+                }}
                 title={summaryVisible ? 'Hide summary' : 'Show summary'}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, color: 'var(--slate)', fontSize: 16, lineHeight: '32px', transition: 'color 0.15s, background 0.15s', display: 'flex', alignItems: 'center', alignSelf: 'stretch' }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#eef2f8'; e.currentTarget.style.color = 'var(--navy)'; }}
@@ -901,7 +1039,7 @@ export default function App() {
                     <>
                       {quotedAt && (
                         <span style={{ fontSize: 11, color: 'var(--slate)', alignSelf: 'center' }}>
-                          Updated {fmtTime(quotedAt)}
+                          Last refreshed {quotedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} {fmtTime(quotedAt)}
                         </span>
                       )}
                       <button
@@ -910,6 +1048,16 @@ export default function App() {
                         disabled={quoteStatus === 'loading' || !portfolio}
                       >
                         {quoteStatus === 'loading' ? 'Fetching…' : quoteStatus === 'error' ? 'Quote Error!' : quoteStatus === 'done' ? 'Updated ✓' : '↻ Refresh Prices'}
+                      </button>
+                      <button
+                        className={`btn btn-sm ${autoRefresh ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => {
+                          if (!autoRefresh) handleRefreshPrices();
+                          setAutoRefresh(v => !v);
+                        }}
+                        disabled={!portfolio}
+                      >
+                        {autoRefresh ? 'Stop Refresh' : 'Auto Refresh'}
                       </button>
                     </>
                   )}
@@ -928,9 +1076,15 @@ export default function App() {
                     rows={openPositions}
                     setPortfolio={setPortfolio}
                     onClose={row => setCloseRow(row)}
-                    onDelete={id => setPortfolio(rs => rs.filter(r => r.id !== id))}
+                    onDelete={id => {
+                      const next = portfolio.filter(r => r.id !== id);
+                      setPortfolio(next);
+                      persistPortfolio(next);
+                    }}
+                    onSave={persistPortfolio}
+                    viewSymbolURL={viewSymbolURL}
                   />
-                : <RealizedTable rows={realized} setRealized={setRealized} />}
+                : <RealizedTable rows={realized} setRealized={setRealized} onSave={persistRealized} viewSymbolURL={viewSymbolURL} />}
             </div>
           </>
         )}

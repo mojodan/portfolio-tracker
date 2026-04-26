@@ -40,7 +40,8 @@
       "Bash(powershell.exe -command 'Add-Type -Assembly System.IO.Compression.FileSystem; $z=[System.IO.Compression.ZipFile]::OpenRead\\('\\\\''C:\\\\Users\\\\dhaye\\\\repos\\\\portfolio-tracker\\\\design\\\\Portfolio Tracker-handoff.zip'\\\\''\\); $z.Entries | Select-Object FullName')",
       "Bash(python -c ' *)",
       "Bash(powershell.exe -command ' *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "PowerShell($proc = netstat -ano | Select-String \":3001 \" | Where-Object { $_ -match \"LISTENING\" } | ForEach-Object { \\($_ -split \"\\\\s+\"\\)[-1] } | Select-Object -First 1; if \\($proc\\) { Write-Host \"Killing PID $proc\"; Stop-Process -Id $proc -Force } else { Write-Host \"No process on 3001\" })"
     ]
   }
 }

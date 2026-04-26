@@ -46,6 +46,7 @@ async function fetchYahooQuotes(symbols) {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
 const BACKUP = path.join(PUBLIC, 'backup');
+const SETTINGS_FILE = path.join(__dirname, 'settings.json');
 
 function timestamp() {
   const d = new Date();
@@ -87,6 +88,34 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/savePortfolio') return saveHandler(req, res, 'portfolio.csv');
   if (req.method === 'POST' && req.url === '/saveRealized') return saveHandler(req, res, 'realized.csv');
 
+  if (req.method === 'POST' && req.url === '/saveSettings') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        fs.writeFileSync(SETTINGS_FILE, body, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (err) {
+        console.error(err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  if (req.method === 'GET' && req.url === '/api/settings') {
+    try {
+      const content = fs.existsSync(SETTINGS_FILE) ? fs.readFileSync(SETTINGS_FILE, 'utf8') : JSON.stringify({ summaryVisible: true });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(content);
+    } catch {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ summaryVisible: true }));
+    }
+  }
+
   if (req.method === 'GET' && req.url.startsWith('/api/quotes')) {
     const urlObj = new URL(req.url, 'http://localhost:3001');
     const symbols = (urlObj.searchParams.get('symbols') || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -109,4 +138,4 @@ const server = http.createServer(async (req, res) => {
   res.end();
 });
 
-server.listen(3001, () => console.log('API server on http://localhost:3001'));
+server.listen(3001, '0.0.0.0', () => console.log('API server on http://0.0.0.0:3001'));

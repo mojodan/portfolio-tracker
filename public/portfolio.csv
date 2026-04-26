@@ -1,15 +1,14 @@
-Symbol,Exchange,Company,Brokerage,Shares,Avg Cost,Total Cost,Cur. Price,Mkt Value,Sector,Alt Symbol,Notes,Date In
-AAPL,NASDAQ,Apple Inc.,Fidelity,100,148.5,14850,270,27000,Technology,,Core long-term hold,2021-03-15
-JNJ,NYSE,Johnson & Johnson,Fidelity,45,158.2,7119,227.66,10244.7,Healthcare,,Dividend compounder,2017-07-19
-JPM,NYSE,JPMorgan Chase & Co.,TD Ameritrade,75,138.6,10395,308.38,23128.5,Financials,,,2019-08-22
-MSFT,NASDAQ,Microsoft Corp.,Schwab,50,278.2,13910,422.49,21124.5,Technology,,Cloud/AI exposure,2020-11-02
-NOK,NYSE,Nokia,Parents,100,10.5,1050,10.55,1055,Telecom,,Gaetano writeup,2026-04-23
-NVDA,NASDAQ,NVIDIA Corp.,Fidelity,30,412,12360,208.31,6249.3,Technology,,AI infrastructure play,2022-06-10
-QQQ,NASDAQ,Invesco QQQ Trust,Schwab,25,362,9050,663.27,16581.75,ETF,,Tech growth exposure,2021-09-30
-SOI,Paris,Soitech,Parents,10,65,650,112.65,1126.5,Semi,SOI.PA,test,2026-04-01
-VTI,NYSE,Vanguard Total Mkt ETF,Schwab,60,218.4,13104,351.93,21115.8,ETF,,Passive core,2020-01-14
-XOM,NYSE,Exxon Mobil Corp.,TD Ameritrade,80,102.4,8192,147.9,11832,Energy,,Dividend play,2022-02-28
-CASH,—,Cash & Equivalents,Fidelity,,,12500,,12500,Cash,,HYSA @ 4.8% APY,
-CASH,—,Cash & Equivalents,Parents,,,0,,0,Cash,,,
-CASH,—,Cash & Equivalents,Schwab,,,0,,0,Cash,,,
-CASH,—,Cash & Equivalents,TD Ameritrade,,,0,,0,Cash,,,
+Symbol,Exchange,Company,Brokerage,Shares,Avg Cost,Total Cost,Cur. Price,Mkt Value,Sector,Alt Symbol,Referrer,Notes,Date In
+AAPL,NASDAQ,Apple Inc.,Fidelity,65,148.5,9652.5,270,17550,Technology,,,Core long-term hold,2021-03-15
+JNJ,NYSE,Johnson & Johnson,Fidelity,35,158.2,5537,227.66,7968.1,Healthcare,,,Dividend compounder,2017-07-19
+JPM,NYSE,JPMorgan Chase & Co.,TD Ameritrade,75,138.6,10395,308.38,23128.5,Financials,,Marlin,,2019-08-22
+MSFT,NASDAQ,Microsoft Corp.,Schwab,50,278.2,13910,422.49,21124.5,Technology,,Marlin,Cloud/AI exposure,2020-11-02
+NVDA,NASDAQ,NVIDIA Corp.,Fidelity,30,412,12360,208.31,6249.3,Technology,,,AI infrastructure play,2022-06-10
+QQQ,NASDAQ,Invesco QQQ Trust,Schwab,25,362,9050,663.27,16581.75,ETF,,,Tech growth exposure,2021-09-30
+SOI,Paris,Soitech,Parents,10,65,650,112.65,1126.5,Semi,SOI.PA,,test,2026-04-01
+VTI,NYSE,Vanguard Total Mkt ETF,Schwab,60,218.4,13104,351.93,21115.8,ETF,,,Passive core,2020-01-14
+XOM,NYSE,Exxon Mobil Corp.,TD Ameritrade,80,102.4,8192,147.9,11832,Energy,,,Dividend play,2022-02-28
+CASH,—,Cash & Equivalents,Fidelity,,,24126.6,,24126.6,Cash,,,HYSA @ 4.8% APY,
+CASH,—,Cash & Equivalents,Parents,,,1200,,1200,Cash,,,,
+CASH,—,Cash & Equivalents,Schwab,,,0,,0,Cash,,,,
+CASH,—,Cash & Equivalents,TD Ameritrade,,,0,,0,Cash,,,,

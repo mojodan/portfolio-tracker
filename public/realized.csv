@@ -1,6 +1,10 @@
-Date In,Date Out,Symbol,Exchange,Company,Brokerage,Shares,Avg Cost,Total Cost,Avg Sell,Total Inflow,Gain / Loss,G/L %,Sector,Alt Symbol,Notes
-2022-11-04,2023-09-15,META,NASDAQ,Meta Platforms Inc.,Fidelity,40,192.3,7692,326.8,13072,5380,69.94,Technology,,Trimmed position
-2022-06-01,2023-01-20,TSLA,NASDAQ,Tesla Inc.,Schwab,20,218.5,4370,178.2,3564,-806,-18.44,Technology,,Stop-loss triggered
-2023-01-10,2024-03-05,AMZN,NASDAQ,Amazon.com Inc.,TD Ameritrade,15,104.6,1569,182.4,2736,1167,74.38,Technology,,Rebalance
-2021-08-22,2023-06-30,GLD,NYSE,SPDR Gold Shares ETF,Fidelity,30,168.2,5046,194.5,5835,789,15.64,Commodities,,Took profits
-2018-04-05,2026-04-23,BRK.B,NYSE,Berkshire Hathaway B,Fidelity,40,308,12320,400,16000,3680,29.87012987012987,Financials,,Value anchor
+Date In,Date Out,Symbol,Exchange,Company,Brokerage,Shares,Avg Cost,Total Cost,Avg Sell,Fees,Total Inflow,Gain / Loss,G/L %,Sector,Alt Symbol,Referrer,Notes
+2022-11-04,2023-09-15,META,NASDAQ,Meta Platforms Inc.,Fidelity,40,192.3,7692,326.8,0,13072,5380,69.94,Technology,,,Trimmed position
+2022-06-01,2023-01-20,TSLA,NASDAQ,Tesla Inc.,Schwab,20,218.5,4370,178.2,0,3564,-806,-18.44,Technology,,,Stop-loss triggered
+2023-01-10,2024-03-05,AMZN,NASDAQ,Amazon.com Inc.,TD Ameritrade,15,104.6,1569,182.4,0,2736,1167,74.38,Technology,,,Rebalance
+2021-08-22,2023-06-30,GLD,NYSE,SPDR Gold Shares ETF,Fidelity,30,168.2,5046,194.5,0,5835,789,15.64,Commodities,,,Took profits
+2018-04-05,2026-04-23,BRK.B,NYSE,Berkshire Hathaway B,Fidelity,40,308,12320,400,0,16000,3680,29.87012987012987,Financials,,,Value anchor
+2021-03-15,2026-04-25,AAPL,NASDAQ,Apple Inc.,Fidelity,25,148.5,3712.5,270,0,6750,3037.5,81.81818181818183,Technology,,,Core long-term hold
+2026-04-23,2026-04-24,NOK,NYSE,Nokia,Parents,100,10.5,1050,12,0,1200,150,14.285714285714285,Telecom,,,Gaetano writeup
+2017-07-19,2026-04-24,JNJ,NYSE,Johnson & Johnson,Fidelity,10,158.2,1582,227.66,0,2276.6,694.5999999999999,43.906447534766116,Healthcare,,,Dividend compounder
+2021-03-15,2026-04-24,AAPL,NASDAQ,Apple Inc.,Fidelity,10,148.5,1485,270,100,2600,1115,75.08417508417509,Technology,,,Core long-term hold
