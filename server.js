@@ -8,22 +8,106 @@ import { fileURLToPath } from 'url';
 // Use the built-in https module with maxHeaderSize instead.
 const YF_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-function httpsGet(url) {
+function httpsGet(url, extraHeaders = {}, log = false) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
-    https.get({ hostname: u.hostname, path: u.pathname + u.search, headers: { 'User-Agent': YF_UA }, maxHeaderSize: 131072 }, res => {
+    if (log) apiLog('REQUEST', null, { url });
+    https.get({ hostname: u.hostname, path: u.pathname + u.search, headers: { 'User-Agent': YF_UA, ...extraHeaders }, maxHeaderSize: 131072 }, res => {
       let body = '';
       res.on('data', c => { body += c; });
-      res.on('end', () => resolve({ status: res.statusCode, body }));
+      res.on('end', () => {
+        if (log) apiLog('RESPONSE', res.statusCode, body);
+        resolve({ status: res.statusCode, headers: res.headers, body });
+      });
     }).on('error', reject);
   });
 }
 
+// Yahoo Finance now requires a crumb + cookie for API calls, especially for international symbols.
+let yf_crumb = null;
+let yf_cookie = null;
+let yf_crumb_fetched_at = 0;
+const CRUMB_TTL_MS = 55 * 60 * 1000; // 55 minutes
+
+async function refreshYahooCrumb() {
+  // Step 1: Visit Yahoo Finance to get session cookies
+  const cookieRes = await new Promise((resolve, reject) => {
+    https.get({
+      hostname: 'finance.yahoo.com',
+      path: '/quote/AAPL',
+      headers: { 'User-Agent': YF_UA, 'Accept': 'text/html' },
+      maxHeaderSize: 131072
+    }, res => {
+      let body = '';
+      const rawCookies = res.headers['set-cookie'] || [];
+      // Extract name=value from each Set-Cookie header
+      const cookie = rawCookies.map(c => c.split(';')[0]).join('; ');
+      res.on('data', c => { body += c; });
+      res.on('end', () => resolve({ cookie }));
+    }).on('error', reject);
+  });
+  yf_cookie = cookieRes.cookie;
+
+  // Step 2: Fetch the crumb using the session cookie
+  const crumbRes = await httpsGet(
+    'https://query1.finance.yahoo.com/v1/test/getcrumb',
+    { 'Cookie': yf_cookie }
+  );
+  if (crumbRes.status !== 200 || !crumbRes.body || crumbRes.body.includes('{')) {
+    throw new Error(`Failed to get Yahoo crumb (HTTP ${crumbRes.status}): ${crumbRes.body.slice(0, 100)}`);
+  }
+  yf_crumb = crumbRes.body.trim();
+  yf_crumb_fetched_at = Date.now();
+  console.log('Yahoo Finance crumb refreshed');
+}
+
+async function getYahooCrumb() {
+  if (!yf_crumb || Date.now() - yf_crumb_fetched_at > CRUMB_TTL_MS) {
+    await refreshYahooCrumb();
+  }
+  return { crumb: yf_crumb, cookie: yf_cookie };
+}
+
 async function fetchOneQuote(symbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
-  const r = await httpsGet(url);
-  if (r.status !== 200) throw new Error(`Yahoo Finance HTTP ${r.status} for ${symbol}`);
-  const meta = JSON.parse(r.body)?.chart?.result?.[0]?.meta;
+  const { crumb, cookie } = await getYahooCrumb();
+  const encoded = encodeURIComponent(symbol);
+  const qs = `interval=1d&range=1d&crumb=${encodeURIComponent(crumb)}`;
+  const headers = { 'Cookie': cookie };
+
+  // Try query2 first — it's more permissive for international/small-cap symbols
+  for (const host of ['query2.finance.yahoo.com', 'query1.finance.yahoo.com']) {
+    const r = await httpsGet(`https://${host}/v8/finance/chart/${encoded}?${qs}`, headers, true);
+    if (r.status === 401 || r.status === 403) {
+      // Crumb expired — refresh once and retry this host
+      yf_crumb = null;
+      const { crumb: c2, cookie: ck2 } = await getYahooCrumb();
+      const qs2 = `interval=1d&range=1d&crumb=${encodeURIComponent(c2)}`;
+      const r2 = await httpsGet(`https://${host}/v8/finance/chart/${encoded}?${qs2}`, { 'Cookie': ck2 }, true);
+      if (r2.status === 200) return parseQuoteMeta(r2.body, symbol);
+    }
+    if (r.status === 200) return parseQuoteMeta(r.body, symbol);
+    console.warn(`${host} returned ${r.status} for ${symbol}, trying next...`);
+  }
+
+  // Last resort: v7 quote endpoint (no chart data needed, just current price)
+  const v7 = await httpsGet(
+    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encoded}&fields=regularMarketPrice,regularMarketPreviousClose&crumb=${encodeURIComponent(crumb)}`,
+    headers,
+    true
+  );
+  if (v7.status !== 200) throw new Error(`All Yahoo Finance endpoints returned non-200 for ${symbol}`);
+  const result = JSON.parse(v7.body)?.quoteResponse?.result?.[0];
+  if (!result) return null;
+  const price = result.regularMarketPrice ?? null;
+  const prevClose = result.regularMarketPreviousClose ?? null;
+  const dayChangePct = (price != null && prevClose != null && prevClose !== 0)
+    ? ((price - prevClose) / prevClose) * 100
+    : null;
+  return { price, prevClose, dayChangePct };
+}
+
+function parseQuoteMeta(body, symbol) {
+  const meta = JSON.parse(body)?.chart?.result?.[0]?.meta;
   if (!meta) return null;
   const price = meta.regularMarketPrice ?? null;
   const prevClose = meta.chartPreviousClose ?? null;
@@ -47,6 +131,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
 const BACKUP = path.join(PUBLIC, 'backup');
 const SETTINGS_FILE = path.join(__dirname, 'settings.json');
+const API_LOG = path.join(__dirname, 'api.log');
+
+function apiLog(direction, statusCode, payload) {
+  const ts = new Date().toISOString();
+  const status = statusCode != null ? String(statusCode) : '-';
+  const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  const truncated = body.length > 2000 ? body.slice(0, 2000) + '...[truncated]' : body;
+  const line = `${ts} | ${status} | ${direction} | ${truncated}\n`;
+  fs.appendFileSync(API_LOG, line);
+}
 
 function timestamp() {
   const d = new Date();
@@ -119,16 +213,20 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && req.url.startsWith('/api/quotes')) {
     const urlObj = new URL(req.url, 'http://localhost:3001');
     const symbols = (urlObj.searchParams.get('symbols') || '').split(',').map(s => s.trim()).filter(Boolean);
+    apiLog('REQUEST', null, { url: req.url, symbols });
     if (!symbols.length) {
+      apiLog('RESPONSE', 400, { error: 'No symbols provided' });
       res.writeHead(400, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'No symbols provided' }));
     }
     try {
       const out = await fetchYahooQuotes(symbols);
+      apiLog('RESPONSE', 200, out);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify(out));
     } catch (e) {
       console.error('Quote error:', e.message);
+      apiLog('RESPONSE', 502, { error: e.message });
       res.writeHead(502, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: e.message }));
     }

@@ -167,7 +167,7 @@ function SortableTh({ label, col, align = 'right', sortCol, sortDir, onSort, wid
 function AddPositionModal({ onClose, onSave }) {
   const [f, setF] = useState({
     symbol: '', exchange: '', altSymbol: '', referrer: '', name: '', brokerage: '',
-    shares: '', avgCost: '', price: '', sector: '', notes: '', dateIn: ''
+    shares: '', avgCost: '', price: '', fees: '', sector: '', notes: '', dateIn: ''
   });
   const set = k => v => setF(p => ({ ...p, [k]: v }));
 
@@ -176,6 +176,7 @@ function AddPositionModal({ onClose, onSave }) {
     const shares = f.shares ? parseFloat(f.shares) : null;
     const avgCost = f.avgCost ? parseFloat(f.avgCost) : null;
     const price = f.price ? parseFloat(f.price) : null;
+    const fees = f.fees ? parseFloat(f.fees) : 0;
     const totalCost = shares != null && avgCost != null ? shares * avgCost : null;
     const marketValue = shares != null && price != null ? shares * price : null;
     const gainLoss = marketValue != null && totalCost != null ? marketValue - totalCost : null;
@@ -183,7 +184,7 @@ function AddPositionModal({ onClose, onSave }) {
     onSave({
       symbol: f.symbol.trim().toUpperCase(), exchange: f.exchange.trim(),
       altSymbol: f.altSymbol.trim(), referrer: f.referrer.trim(), name: f.name.trim(), brokerage: f.brokerage.trim(),
-      shares, avgCost, price, totalCost, marketValue, gainLoss, gainLossPct,
+      shares, avgCost, price, fees, totalCost, marketValue, gainLoss, gainLossPct,
       dayChangePct: null, dayGainLoss: null, sector: f.sector.trim(), notes: f.notes.trim(),
       dateIn: f.dateIn || null, isCash: false
     });
@@ -203,8 +204,8 @@ function AddPositionModal({ onClose, onSave }) {
             ['altSymbol', 'Alt Symbol', 'text'], ['referrer', 'Referrer', 'text'],
             ['name', 'Company Name', 'text'], ['brokerage', 'Brokerage', 'text'],
             ['shares', 'Shares', 'number'], ['avgCost', 'Avg Cost ($)', 'number'],
-            ['price', 'Current Price ($)', 'number'], ['sector', 'Sector', 'text'],
-            ['dateIn', 'Date In', 'date'],
+            ['price', 'Current Price ($)', 'number'], ['fees', 'Fees ($)', 'number'],
+            ['sector', 'Sector', 'text'], ['dateIn', 'Date In', 'date'],
           ].map(([k, label, type]) => (
             <div key={k} className={`form-group ${['name', 'brokerage'].includes(k) ? 'full' : ''}`}>
               <label className="form-label">{label}</label>
@@ -798,7 +799,15 @@ export default function App() {
     const pos = { ...newPos, id: newId };
     const nonCash = [...portfolio.filter(r => !r.isCash), pos]
       .sort((a, b) => a.symbol.localeCompare(b.symbol));
-    const updated = ensureCashRows([...nonCash, ...portfolio.filter(r => r.isCash)]);
+    const withCash = ensureCashRows([...nonCash, ...portfolio.filter(r => r.isCash)]);
+    const cost = (pos.totalCost || 0) + (pos.fees || 0);
+    const updated = cost > 0
+      ? withCash.map(r =>
+          r.isCash && r.brokerage === pos.brokerage
+            ? { ...r, totalCost: (r.totalCost || 0) - cost, marketValue: (r.marketValue || 0) - cost }
+            : r
+        )
+      : withCash;
     setPortfolio(updated);
     try {
       const csv = portfolioRowsToCsv(updated);
@@ -901,7 +910,8 @@ export default function App() {
         const marketValue = r.shares != null ? +(r.shares * price).toFixed(2) : null;
         const gainLoss = marketValue != null && r.totalCost != null ? +(marketValue - r.totalCost).toFixed(2) : null;
         const gainLossPct = gainLoss != null && r.totalCost > 0 ? +((gainLoss / r.totalCost) * 100).toFixed(4) : null;
-        const dayGainLoss = r.shares != null && prevClose != null ? +(r.shares * (price - prevClose)).toFixed(2) : null;
+//        const dayGainLoss = r.shares != null && prevClose != null ? +(r.shares * (price - prevClose)).toFixed(2) : null;
+        const dayGainLoss = r.shares != null && prevClose != null ? +(1 * (price - prevClose)).toFixed(2) : null;
         return { ...r, price, prevClose, marketValue, gainLoss, gainLossPct, dayGainLoss, dayChangePct: q.dayChangePct ?? r.dayChangePct };
       }));
       setQuotedAt(new Date());

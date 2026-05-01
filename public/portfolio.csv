@@ -1,14 +1,36 @@
 Symbol,Exchange,Company,Brokerage,Shares,Avg Cost,Total Cost,Cur. Price,Mkt Value,Sector,Alt Symbol,Referrer,Notes,Date In
-AAPL,NASDAQ,Apple Inc.,Fidelity,65,148.5,9652.5,270,17550,Technology,,,Core long-term hold,2021-03-15
-JNJ,NYSE,Johnson & Johnson,Fidelity,35,158.2,5537,227.66,7968.1,Healthcare,,,Dividend compounder,2017-07-19
-JPM,NYSE,JPMorgan Chase & Co.,TD Ameritrade,75,138.6,10395,308.38,23128.5,Financials,,Marlin,,2019-08-22
-MSFT,NASDAQ,Microsoft Corp.,Schwab,50,278.2,13910,422.49,21124.5,Technology,,Marlin,Cloud/AI exposure,2020-11-02
-NVDA,NASDAQ,NVIDIA Corp.,Fidelity,30,412,12360,208.31,6249.3,Technology,,,AI infrastructure play,2022-06-10
-QQQ,NASDAQ,Invesco QQQ Trust,Schwab,25,362,9050,663.27,16581.75,ETF,,,Tech growth exposure,2021-09-30
-SOI,Paris,Soitech,Parents,10,65,650,112.65,1126.5,Semi,SOI.PA,,test,2026-04-01
-VTI,NYSE,Vanguard Total Mkt ETF,Schwab,60,218.4,13104,351.93,21115.8,ETF,,,Passive core,2020-01-14
-XOM,NYSE,Exxon Mobil Corp.,TD Ameritrade,80,102.4,8192,147.9,11832,Energy,,,Dividend play,2022-02-28
-CASH,—,Cash & Equivalents,Fidelity,,,24126.6,,24126.6,Cash,,,HYSA @ 4.8% APY,
-CASH,—,Cash & Equivalents,Parents,,,1200,,1200,Cash,,,,
-CASH,—,Cash & Equivalents,Schwab,,,0,,0,Cash,,,,
-CASH,—,Cash & Equivalents,TD Ameritrade,,,0,,0,Cash,,,,
+AEHR,Nasdaq,AEHR Test Systems,dan-etrade,65,67.4045,4381.2925,90.56,5886.4,Semis,,Marlin,Small cap with huge growth potential. 3.5x book-to-bill ratio and just getting started in the Optics/Photonics space.,2026-04-09
+AIXA,Germany,Aixtron SE,ibk,6,45.12,270.71999999999997,46.98,281.88,Semis,AIXA.DE,Jason Chips,,2026-04-17
+AMPX,NYSE,Amprius Technologies,dan-etrade,180,22.05,3969,21.06,3790.8,EV,,Marlin,https://marlincapital.substack.com/p/2026-portfolio-new-buys,2026-04-24
+AMSC,Nasdaq,American Superconductor Corp,dan-etrade,84,48.14,4043.76,53.54,4497.36,Data Center,,Marlin,https://marlincapital.substack.com/p/2026-portfolio-new-buys,2026-04-24
+AVEX,NYSE,AEVEX Corp,dan-etrade,73,30.7407,2244.0711,30.25,2208.25,Drones,,Asym Bets,Leg One: Coverage ($32 → $45). Sell-side initiates in mid-May. Any growth-adjusted framework ranks AEVEX above AVAV. A partial re-rate to 5.5x forward (still below Kratos at 7.8x) puts the stock at $40 to $45. That’s a 25 to 40% move. Catalyst: mid-May 2026.  See https://open.substack.com/pub/asymmetricalbets/p/this-36b-anduril-competitor-could?r=aaxvt&utm_campaign=post&utm_medium=web,2026-04-20
+AVGO,Nasdaq,Broadcom Inc,hsa,6,343.2,2059.2,417.43,2504.58,Semis,,,,2026-02-09
+BE,NYSE,Bloom Energy,fidelity,14,158.34,2216.76,283.36,3967.04,Energy,,Jason Chips,,2026-04-09
+COHR,NYSE,Coherent Corp,dan-etrade,15,282.01,4230.15,319.71,4795.65,Semis,,Marlin,COHR remains one of my favorite ways to play the 800G/1.6T optical supercycle. Nvidia handed them a $2B silicon photonics deal in March. Data center book-to-bill over 4x. “Insatiable” demand.,2026-04-09
+CRDO,Nasdaq,Credo Technology,parents,14,163.245,2285.4300000000003,174.01,2436.14,Semis,,Marlin,,2026-04-20
+CRWV,Nasdaq,Coreweave,dan-etrade,33,120.77,3985.41,111.6,3682.8,Data Centers,,Marlin,https://marlincapital.substack.com/p/2026-portfolio-new-buys,2026-04-24
+GDX,ETF,VanEck Gold Miners,hsa,34,114.525,3893.8500000000004,88.29,3001.86,Gold,,Noble,,2026-02-27
+GDX,ETF,VanEck Gold Miners,parents,43,115.06,4947.58,88.29,3796.47,Gold,,Noble,,2026-02-27
+GLW,NYSE,"Corning, Inc.",hsa,20,147.78,2955.6,164.24,3284.8,Materials,,,,2026-02-24
+INTC,Nasdaq,Intel,meg-etrade,126,61.565,7757.19,94.48,11904.48,Semis,,Jason Chips,,2026-04-09
+LITE,Nasdaq,Lumentum,fidelity,6,889.79,5338.74,902.32,5413.92,Semis,,Marlin,The next generation of optical technology.,2026-04-09
+LPK,Germany,LPKF Laser,ibk,40,14.07,562.8,16.55,662,Semis,LPK.DE,,,2026-04-17
+LRCX,Nasdaq,LAM Research,dan-etrade,15,267.5,4012.5,257.86,3867.9,Wafer Equipment,,Marlin,https://marlincapital.substack.com/p/2026-portfolio-new-buys,2026-04-24
+LRN,NYSE,Stride,fidelity,49,90.2,4419.8,97.16,4760.84,Semis,,Jason Chips,,2026-04-09
+M7U,Germany,Nynomic,ibk,30,18.85,565.5,20.2,606,ai tools,M7U.DE,Asym Bets,https://reflect.site/g/mojodan/these-5-european-photonics-stocks-trade-at-a-fraction-of-their-us-peers/readwise-59791936,2026-04-17
+NBIS,Nasdaq,Nebius Group,dan-etrade,32,134.82,4314.24,138.23,4423.36,Data Center,,Marlin,"Nebius was 1 of our biggest winners in 2025 (>105%). For me, this is the #1 Data center play in the market. Massive growth ahead.",2026-04-09
+NUAI,Nasdaq,"New Era Energy & Digital, Inc.",hsa,422,4.45705,1880.8751,3.94,1662.68,Data Center,,Prudent Whale,,2026-03-27
+NVDA,Nasdaq,NVIDIA,meg-etrade,43,115.9651,4986.4993,199.57,8581.51,Semis,,Jason Chips,,2025-03-12
+P40,Germany,Planoptik,ibk,25,11.07,276.75,7.88,197,Glass Wafers,P4O.DE,Asym Bets,https://reflect.site/g/mojodan/these-5-european-photonics-stocks-trade-at-a-fraction-of-their-us-peers/readwise-59791936,2026-04-17
+PCT,Nasdaq,Purecycle Technologies,dan-etrade,1000,5.735,5735,7.48,7480,Technology,,Noble,"Tom Thorton (see reflect): $20 by end of year, 3-5 year play for more, need customer conversion in 2026",2026-03-11
+SOI,Paris,Soitech,ibk,15,64.06,960.9000000000001,126.95,1904.25,Semi,SOI.PA,Jason Chips,,2026-04-13
+TER,Nasdaq,Teradyne,dan-etrade,12,363.55,4362.6,343.47,4121.64,Robotics,,Marlin,"Round 2 for us on TER. We made +41% on our first TER trade this year. Teradyne is the #1 robotics leader in the market, in my opinion. As chip complexity increases and AI automation accelerates, TER will continue to benefit immensely.",2026-04-09
+TTMI,Nasdaq,TTM Technologies,fidelity,11,115.6,1271.6,158.22,1740.42,Semis,,Marlin,,2026-04-15
+VRT,NYSE,Vertiv,meg-etrade,15,290.49,4357.35,328.49,4927.35,Data Center,,Marlin,Vertiv is the large cap leader of the data center cooling theme. Q4 orders +252% YoY. Book-to-bill 2.9x. $15B backlog (+109% YoY). CEO said “early innings.”,2026-04-09
+WDC,Nasdaq,Western Digital,dan-etrade,13,337.39,4386.07,434.52,5648.76,Semis,,Marlin,Western Digital is sold out through CY2026 with multi-year supply agreements extending to 2027-2028. $4.48B buyback capacity. Another “must own” memory leader.,2026-04-09
+CASH,—,Cash & Equivalents,dan-etrade,,,33323.77,,33323.77,Cash,,,,
+CASH,—,Cash & Equivalents,fidelity,,,38489.44,,38489.44,Cash,,,,
+CASH,—,Cash & Equivalents,hsa,,,1109.05,,1109.05,Cash,,,,
+CASH,—,Cash & Equivalents,ibk,,,0,,0,Cash,,,,
+CASH,—,Cash & Equivalents,meg-etrade,,,11597.59,,11597.59,Cash,,,,
+CASH,—,Cash & Equivalents,parents,,,11653.61,,11653.61,Cash,,,,
